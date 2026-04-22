@@ -1,43 +1,33 @@
-# Astro Starter Kit: Minimal
+# haliburtonco.com
+
+Marketing site for Haliburton NDT Engineering Consultants, LLC.
+
+Built with [Astro](https://astro.build) — static HTML, vanilla CSS, deployed on Vercel.
+
+## Local development
 
 ```sh
-npm create astro@latest -- --template minimal
+npm install
+npm run dev          # http://localhost:4321
+npm run build        # output to ./dist
+npm run preview      # preview the production build
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Structure
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```
+src/
+├── components/      # Header, Footer, Eyebrow
+├── layouts/         # Layout shell
+├── pages/           # one .astro per route
+└── styles/          # tokens.css, base.css
+public/              # favicon and other static assets
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Editing content
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+All page copy lives directly in `src/pages/*.astro`. Edit, save, the dev server hot-reloads. Commit and push — Vercel auto-deploys on push to `main`.
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Design tokens
 
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+`src/styles/tokens.css` holds the design system: bone background, near-black ink, oxidized-red accent, Inter + JetBrains Mono pairing, fluid typography scale, modular spacing.
