@@ -1,0 +1,70 @@
+---
+import "../styles/tokens.css";
+import "../styles/base.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const {
+  title,
+  description = "Mission-critical NDT engineering for aerospace. Haliburton NDT Engineering Consultants — ASNT Level III in UT, PT, MT, ET. Denver, CO."
+} = Astro.props;
+const fullTitle = title === "Home"
+  ? "Haliburton NDT Engineering Consultants"
+  : `${title} — Haliburton NDT Engineering Consultants`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Haliburton NDT Engineering Consultants" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f5f2ea" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+
+    <style is:global>
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: var(--space-3);
+        z-index: 100;
+        padding: 0.5rem 1rem;
+        background: var(--ink);
+        color: var(--bg);
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .skip-link:focus { left: var(--gutter); }
+    </style>
+  </body>
+</html>

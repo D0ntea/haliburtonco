@@ -1,0 +1,58 @@
+/* Design tokens — Swiss precision / spec-sheet editorial direction. */
+
+:root {
+  /* Colour: bone, ink, oxidised-red accent. */
+  --bg: #f5f2ea;
+  --bg-elev: #efeadf;
+  --ink: #1a1a1a;
+  --ink-muted: #6b6b6b;
+  --ink-faint: #9a9a9a;
+  --rule: rgba(26, 26, 26, 0.14);
+  --rule-strong: rgba(26, 26, 26, 0.32);
+  --accent: #b34030;
+  --accent-ink: #8a2e22;
+
+  /* Type families */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* Type scale (clamp for fluid responsive). */
+  --text-xs: 0.75rem;          /* 12 — mono eyebrows, micro-labels */
+  --text-sm: 0.8125rem;        /* 13 — caption, footnote */
+  --text-base: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  --text-md: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);   /* lead */
+  --text-lg: clamp(1.25rem, 1.1rem + 0.7vw, 1.5rem);
+  --text-h3: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  --text-h2: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
+  --text-h1: clamp(2.75rem, 1.6rem + 5vw, 5.75rem);
+  --text-display: clamp(3.5rem, 2rem + 7vw, 8rem); /* reserved for large editorial moments */
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+  --space-6: 4rem;
+  --space-7: 6rem;
+  --space-8: 10rem;
+
+  /* Layout */
+  --content-max: 76rem;
+  --measure: 64ch;
+  --gutter: clamp(1.25rem, 1rem + 1.5vw, 2.5rem);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 240ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+  }
+}

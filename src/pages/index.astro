@@ -1,0 +1,226 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Eyebrow from "../components/Eyebrow.astro";
+---
+<Layout title="Home">
+  <!-- Hero -->
+  <section class="hero shell">
+    <Eyebrow number="00" label="Haliburton NDT Engineering Consultants, LLC" />
+
+    <h1 class="hero__h">
+      Mission-critical<br />NDT engineering<br />for aerospace.
+    </h1>
+
+    <p class="lead hero__lead">
+      A veteran-owned, aerospace-focused practice that safeguards mission-critical
+      hardware through comprehensive nondestructive testing.
+    </p>
+
+    <p class="hero__cred">
+      <span class="cred">ASNT Level III · UT · PT · MT · ET</span>
+      <span aria-hidden="true">·</span>
+      <span class="cred">Cert #331277</span>
+    </p>
+
+    <div class="hero__cta">
+      <a href="/contact" class="btn">Request a quote</a>
+      <a href="/services" class="btn btn--ghost">Services</a>
+    </div>
+  </section>
+
+  <!-- Who we serve -->
+  <section class="section shell">
+    <div class="grid-2">
+      <header>
+        <Eyebrow number="01" label="Who we serve" />
+        <h2 class="section__h">Built for programs where a missed indication ends the mission.</h2>
+      </header>
+      <ol class="serve">
+        <li><span>01</span>Launch-vehicle &amp; satellite OEMs</li>
+        <li><span>02</span>Commercial &amp; business-jet MROs</li>
+        <li><span>03</span>Defense primes &amp; Tier-1 suppliers</li>
+        <li><span>04</span>Advanced composite &amp; additive-manufacturing facilities</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- What we do -->
+  <section class="section shell">
+    <div class="grid-2">
+      <header>
+        <Eyebrow number="02" label="What we do" />
+        <h2 class="section__h">Audit-ready documentation. Statistically proven detection.</h2>
+        <p class="muted" style="margin-top: var(--space-3); max-width: 36ch;">
+          Lower program risk from R&amp;D through production.
+        </p>
+      </header>
+
+      <dl class="dl what">
+        <dt>Procedures</dt>
+        <dd>Engineer &amp; qualify procedures — PAUT/TFM, conventional UT, visual, penetrant, magnetic-particle, and eddy-current inspections.</dd>
+
+        <dt>POD Studies</dt>
+        <dd>Probability-of-Detection programs — Point-Estimate, LS-POD, and full <span class="cred">MIL-HDBK-1823A</span> studies delivering 90/95 reliability data.</dd>
+
+        <dt>Level III</dt>
+        <dd>On-demand oversight — procedure approval, technician exams, eye tests, and audit support.</dd>
+
+        <dt>Training</dt>
+        <dd>Classroom formal instruction — delivered in accordance with <span class="cred">ASNT SNT-TC-1A</span> and <span class="cred">NAS 410</span>.</dd>
+
+        <dt>Audits</dt>
+        <dd>Mock <span class="cred">NADCAP AC7114</span> and <span class="cred">NAS 410</span> audits, root-cause &amp; CAPA implementation, QMS gap analysis against <span class="cred">AS9100 / ISO 9001</span>.</dd>
+      </dl>
+    </div>
+
+    <div class="what__cta">
+      <a href="/services" class="btn btn--ghost">See full services</a>
+    </div>
+  </section>
+
+  <!-- Standards strip -->
+  <section class="section shell">
+    <Eyebrow number="03" label="Standards we work to" />
+    <ul class="bare standards">
+      <li>AWS&nbsp;D17.1</li>
+      <li>NASA&nbsp;STD-5009</li>
+      <li>MIL-HDBK-1823A</li>
+      <li>NADCAP&nbsp;AC7114</li>
+      <li>NAS&nbsp;410</li>
+      <li>ASNT&nbsp;SNT-TC-1A</li>
+      <li>ISO&nbsp;9712</li>
+      <li>AS9100</li>
+      <li>ISO&nbsp;9001</li>
+    </ul>
+  </section>
+
+  <!-- Closing CTA -->
+  <section class="section shell closing">
+    <Eyebrow number="04" label="Engagement" />
+    <p class="closing__line">
+      Reduce program risk before customers or regulators arrive.
+    </p>
+    <div class="closing__cta">
+      <a href="/contact" class="btn">contact@haliburtonco.com →</a>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .hero {
+    padding-block: clamp(4rem, 3rem + 8vw, 10rem) clamp(3rem, 2rem + 6vw, 7rem);
+  }
+  .hero__h {
+    margin-top: var(--space-4);
+    max-width: 18ch;
+    font-weight: 500;
+  }
+  .hero__lead {
+    margin-top: var(--space-5);
+    max-width: 50ch;
+  }
+  .hero__cred {
+    margin-top: var(--space-5);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    color: var(--ink-muted);
+  }
+  .hero__cta {
+    margin-top: var(--space-6);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .section__h {
+    margin-top: var(--space-4);
+    max-width: 22ch;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: var(--space-6) var(--space-6);
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    .grid-2 { grid-template-columns: 1fr; gap: var(--space-5); }
+  }
+
+  .serve {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0;
+  }
+  .serve li {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    gap: var(--space-3);
+    align-items: baseline;
+    padding-block: var(--space-4);
+    border-top: 1px solid var(--rule);
+    font-size: var(--text-md);
+    letter-spacing: -0.012em;
+  }
+  .serve li:last-child { border-bottom: 1px solid var(--rule); }
+  .serve li span {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    color: var(--accent);
+  }
+
+  .what dt {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .what__cta {
+    margin-top: var(--space-5);
+    padding-left: 0;
+  }
+
+  .standards {
+    margin-top: var(--space-5);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .standards li {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    letter-spacing: 0.04em;
+    padding: var(--space-3) var(--space-4) var(--space-3) 0;
+    margin-right: var(--space-4);
+    border-right: 1px solid var(--rule);
+  }
+  .standards li:last-child { border-right: none; margin-right: 0; }
+
+  .closing { padding-block: var(--space-7); }
+  .closing__line {
+    margin-top: var(--space-4);
+    font-size: var(--text-h2);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.028em;
+    max-width: 22ch;
+    text-wrap: balance;
+  }
+  .closing__cta { margin-top: var(--space-5); }
+
+  @media (max-width: 640px) {
+    .standards li {
+      border-right: none;
+      border-bottom: 1px solid var(--rule);
+      margin-right: 0;
+      width: 100%;
+      padding: var(--space-3) 0;
+    }
+    .standards li:last-child { border-bottom: none; }
+  }
+</style>

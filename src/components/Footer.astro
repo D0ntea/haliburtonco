@@ -1,0 +1,91 @@
+---
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="shell">
+    <div class="site-footer__top">
+      <div class="site-footer__brand">
+        <p class="site-footer__mark">Haliburton NDT Engineering Consultants, LLC</p>
+        <p class="site-footer__tagline">Mission-critical NDT engineering for aerospace.</p>
+      </div>
+
+      <dl class="site-footer__contact">
+        <dt>Email</dt>
+        <dd><a href="mailto:contact@haliburtonco.com">contact@haliburtonco.com</a></dd>
+        <dt>Based</dt>
+        <dd>Denver, Colorado</dd>
+        <dt>Reply</dt>
+        <dd>Within one business day. Formal quote in 24 hours.</dd>
+      </dl>
+    </div>
+
+    <hr class="rule" />
+
+    <div class="site-footer__bottom">
+      <p class="site-footer__copy">© {year} Haliburton NDT Engineering Consultants, LLC. All rights reserved.</p>
+      <p class="site-footer__cred">
+        <span class="cred">ASNT Level III · UT · PT · MT · ET</span>
+        <span class="muted">·</span>
+        <span class="cred muted">Cert #331277</span>
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--space-8);
+    padding-block: var(--space-7) var(--space-5);
+    border-top: 1px solid var(--rule);
+    background: var(--bg);
+  }
+  .site-footer__top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    align-items: start;
+  }
+  .site-footer__mark {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: var(--space-3);
+  }
+  .site-footer__tagline {
+    font-size: var(--text-md);
+    line-height: 1.35;
+    letter-spacing: -0.012em;
+    max-width: 28ch;
+    color: var(--ink);
+  }
+
+  .site-footer__contact {
+    grid-template-columns: minmax(6rem, 8rem) 1fr;
+  }
+
+  .site-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-5);
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+  }
+  .site-footer__cred {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 720px) {
+    .site-footer__top { grid-template-columns: 1fr; gap: var(--space-5); }
+    .site-footer__bottom { flex-direction: column; align-items: flex-start; }
+  }
+</style>

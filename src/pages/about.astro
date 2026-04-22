@@ -1,0 +1,127 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Eyebrow from "../components/Eyebrow.astro";
+
+const background = [
+  ["USAF", "NDI Journeyman — RAF Lakenheath, Osan Air Base. Cracked A-10 engine inlet and IPC blade discovery experience."],
+  ["Aerospace", "Credentials issued or training delivered by Boeing, Rolls-Royce, Chromalloy, Eddyfi, Lavender International, ATS, XRI, Karl Kraft, and Intermountain Testing."],
+  ["Trent class", "Rolls-Royce Trent 1000 / 1000-TEN / 7000 IPC Rotor 1 & 2 Blade phased-array inspection precedent — TI0175 / TI0182 / TI0183."],
+  ["ASNT", "Mentor Program participant, 2023–2024. Active Level III pursuit examined by Anthony J. Battaglia (ASNT #110987), 2025."],
+  ["Education", "Master's in Materials Science in progress — Arizona State University, Ira A. Fulton Schools of Engineering."],
+  ["Featured", "Materials Evaluation, July 2025 — Scope|At Work column."],
+];
+---
+<Layout title="About">
+  <section class="page-head shell">
+    <Eyebrow number="00" label="About" />
+    <h1 class="page-head__h">A practice built around a single Level III.</h1>
+    <p class="lead page-head__lead">
+      Haliburton NDT Engineering Consultants, LLC is a veteran-owned, aerospace-focused
+      practice that safeguards mission-critical hardware through comprehensive nondestructive testing.
+    </p>
+  </section>
+
+  <section class="section shell">
+    <div class="grid-2">
+      <header>
+        <Eyebrow number="01" label="Founder" />
+        <h2 class="section-h">Dontea Haliburton</h2>
+      </header>
+      <div>
+        <ul class="bare titles">
+          <li>FAA Accountable Manager</li>
+          <li>Quality Director</li>
+          <li>Responsible Level III</li>
+        </ul>
+        <p class="muted">ASNT Level III certified in <span class="cred">UT · PT · MT · ET</span> — <span class="cred">Cert #331277</span>.</p>
+        <p class="muted" style="margin-top: var(--space-3);">Based in Denver, Colorado. Engagements served nationally.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell">
+    <Eyebrow number="02" label="Background" />
+    <dl class="dl background">
+      {background.map(([k, v]) => (
+        <>
+          <dt>{k}</dt>
+          <dd>{v}</dd>
+        </>
+      ))}
+    </dl>
+  </section>
+
+  <section class="section shell">
+    <Eyebrow number="03" label="Operating principle" />
+    <blockquote class="motto">
+      <p>"Fly, Fight, Win."</p>
+      <footer><span class="cred muted">— U.S. Air Force motto, carried into the practice.</span></footer>
+    </blockquote>
+  </section>
+
+  <section class="section shell closing">
+    <Eyebrow number="04" label="Engagement" />
+    <p class="closing__line">Bring HNEC into the program before the next audit cycle.</p>
+    <a href="/contact" class="btn">contact@haliburtonco.com →</a>
+  </section>
+</Layout>
+
+<style>
+  .page-head { padding-block: clamp(4rem, 3rem + 6vw, 8rem) var(--space-6); }
+  .page-head__h { margin-top: var(--space-4); max-width: 22ch; }
+  .page-head__lead { margin-top: var(--space-5); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: var(--space-5) var(--space-6);
+    align-items: start;
+  }
+  @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .section-h { margin-top: var(--space-4); }
+
+  .titles {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: var(--space-4);
+  }
+  .titles li {
+    font-size: var(--text-md);
+    letter-spacing: -0.012em;
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+  }
+  .titles li:first-child { border-top: 1px solid var(--rule); }
+
+  .background {
+    margin-top: var(--space-4);
+    grid-template-columns: minmax(8rem, 12rem) 1fr;
+  }
+
+  .motto {
+    margin-top: var(--space-5);
+    padding: var(--space-5) 0 var(--space-5) var(--space-5);
+    border-left: 2px solid var(--accent);
+  }
+  .motto p {
+    font-size: var(--text-h2);
+    line-height: 1.05;
+    letter-spacing: -0.028em;
+    font-weight: 500;
+    max-width: 18ch;
+  }
+  .motto footer { margin-top: var(--space-4); }
+
+  .closing { padding-block: var(--space-7); }
+  .closing__line {
+    margin-block: var(--space-4) var(--space-5);
+    font-size: var(--text-h2);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.028em;
+    max-width: 22ch;
+    text-wrap: balance;
+  }
+</style>

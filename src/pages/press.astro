@@ -1,0 +1,116 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Eyebrow from "../components/Eyebrow.astro";
+---
+<Layout title="Press">
+  <section class="page-head shell">
+    <Eyebrow number="00" label="Press & recognition" />
+    <h1 class="page-head__h">In the trade press.</h1>
+  </section>
+
+  <section class="section shell">
+    <article class="feature">
+      <div class="feature__meta">
+        <span class="cred">Materials Evaluation</span>
+        <span class="muted"> · July 2025 · p. 66</span>
+      </div>
+      <h2 class="feature__title">"Scope&nbsp;|&nbsp;At&nbsp;Work" column</h2>
+      <p class="muted feature__pub">ASNT's flagship publication.</p>
+
+      <div class="feature__quotes">
+        <blockquote class="q">
+          <p>"It's got to be training, right? It's an easy one to call out, but the technology is just evolving so quickly… Looking at the development of our industry — NDT 4.0 and the digital transformation that NDT is going through — we can do things more efficiently and in a way that's more reliable."</p>
+          <footer><span class="cred muted">— On the biggest challenge facing NDT today</span></footer>
+        </blockquote>
+
+        <blockquote class="q">
+          <p>"Being a service member, being a veteran, we've got this mantra in the Air Force — Fly, Fight, Win. Whenever I'm in a difficult situation, that grounds me and gives me the motivation I need to push through and keep going."</p>
+          <footer><span class="cred muted">— On personal motto</span></footer>
+        </blockquote>
+      </div>
+    </article>
+  </section>
+
+  <section class="section shell">
+    <Eyebrow number="01" label="Recognition" />
+    <ul class="bare recog">
+      <li>
+        <span class="recog__year">2023–24</span>
+        <span class="recog__title">ASNT Mentor Program — Participant</span>
+      </li>
+      <li>
+        <span class="recog__year">USAF</span>
+        <span class="recog__title">NDI Journeyman — RAF Lakenheath, Osan Air Base</span>
+      </li>
+      <li>
+        <span class="recog__year">2025</span>
+        <span class="recog__title">ASNT Level III — UT · PT · MT · ET — <span class="cred">Cert #331277</span></span>
+      </li>
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .page-head { padding-block: clamp(4rem, 3rem + 6vw, 8rem) var(--space-6); }
+  .page-head__h { margin-top: var(--space-4); max-width: 22ch; }
+
+  .feature {
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-5);
+  }
+  .feature__meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .feature__title {
+    margin-top: var(--space-3);
+    font-size: var(--text-h2);
+    max-width: 18ch;
+  }
+  .feature__pub { margin-top: var(--space-2); }
+
+  .feature__quotes {
+    margin-top: var(--space-6);
+    display: grid;
+    gap: var(--space-5);
+  }
+  .q {
+    border-left: 2px solid var(--accent);
+    padding: var(--space-3) 0 var(--space-3) var(--space-5);
+  }
+  .q p {
+    font-size: var(--text-md);
+    line-height: 1.45;
+    letter-spacing: -0.012em;
+    max-width: 56ch;
+  }
+  .q footer { margin-top: var(--space-3); }
+
+  .recog {
+    margin-top: var(--space-4);
+    border-top: 1px solid var(--rule);
+  }
+  .recog li {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--rule);
+    font-size: var(--text-md);
+    letter-spacing: -0.012em;
+  }
+  .recog__year {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-top: 0.4rem;
+  }
+  @media (max-width: 640px) {
+    .recog li { grid-template-columns: 1fr; gap: var(--space-1); }
+    .recog__year { padding-top: 0; }
+  }
+</style>
