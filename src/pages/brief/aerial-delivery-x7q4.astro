@@ -1,0 +1,173 @@
+---
+// Unlisted interview brief for the ASU MEE 488 senior capstone (Team 9).
+// Reached only by direct link from interview-request emails. Not in the
+// nav, not in any sitemap, robots noindex. Employer stays off this page.
+import Layout from "../../layouts/Layout.astro";
+import Eyebrow from "../../components/Eyebrow.astro";
+
+const BOOK = "https://calendly.com/haliburton-ndt/asu-capstone-interview";
+
+const facts = [
+  ["Program", "Arizona State University — MEE 488, Mechanical Engineering Design I (senior capstone), Fall 2026."],
+  ["Team", "Eight mechanical engineering seniors. Advised by ASU faculty. Contact for this interview: Dontea Haliburton."],
+  ["Stage", "Problem definition. We are interviewing users and experts before we commit to any design."],
+  ["Timeline", "Interviews this week and next. Concept selection follows in late September; a proof-of-concept prototype by spring 2027."],
+];
+
+const themes = [
+  "The last time a landing site was refused, and what made the call.",
+  "What happens to the patient, the crew, or the supplies when the aircraft cannot land.",
+  "What rough or unprepared ground does to the aircraft, and what that costs.",
+  "What would need to be delivered, how heavy, how fragile, and how close it has to land to be useful.",
+  "What would make you distrust or refuse a system that drops a package instead of landing.",
+  "Who decides to adopt equipment like this, and what they would need to see first.",
+];
+
+const notCovered = [
+  "No sales pitch. There is no product. Nothing to buy, trial, or endorse.",
+  "No proprietary detail needed. Procedures, incident specifics, and customer names stay with you.",
+  "Your name is not published. Course write-ups use a first name and a role only, and you can ask us to leave both out.",
+  "Twenty minutes, on your schedule. One or two teammates may listen in.",
+];
+---
+<Layout
+  title="Interview brief — ASU Capstone"
+  description="Background for a 20-minute user interview on precision aerial delivery in terrain where aircraft cannot land. ASU MEE 488 senior capstone, Team 9."
+  noindex
+>
+  <section class="page-head shell">
+    <Eyebrow number="00" label="Interview brief · unlisted" />
+    <h1 class="page-head__h">Getting a package to the ground where nothing can land.</h1>
+    <p class="lead page-head__lead">
+      A senior engineering team at Arizona State University is studying precision aerial delivery for
+      places a delivery drone cannot land and a helicopter should not: a fire line, a mountainside, a
+      cave or canyon with no road in. Before we design anything we want twenty minutes with the people
+      who do this work.
+    </p>
+    <p class="meta"><span class="cred">ASU MEE 488 · Team 9 · Fall 2026</span></p>
+  </section>
+
+  <section class="section shell">
+    <div class="grid-2">
+      <header>
+        <Eyebrow number="01" label="The problem" />
+        <h2 class="section-h">Delivery works. Touchdown does not.</h2>
+      </header>
+      <div class="prose">
+        <p>
+          Drones can already fly a package to a set of coordinates. What they cannot do reliably is put
+          it on the ground when the ground is bad: a slope, a rock field, a burned-over ridge, a rooftop
+          nobody surveyed, a gust that arrives as the package comes down. In those places the package
+          either cannot be released or lands where it is no use.
+        </p>
+        <p>
+          Our working question is whether a small terrain-adaptive delivery capsule, carried by any
+          aircraft and released without the aircraft landing, could close that gap. The answer depends
+          on what the people who fly and work in those conditions actually need, which is why we are
+          asking you before we draw anything.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell">
+    <Eyebrow number="02" label="What we would ask" />
+    <p class="muted intro">Six themes. Your story and your judgment matter more than exact numbers.</p>
+    <ol class="themes">
+      {themes.map((t) => <li>{t}</li>)}
+    </ol>
+  </section>
+
+  <section class="section shell">
+    <div class="grid-2">
+      <header>
+        <Eyebrow number="03" label="What this is not" />
+        <h2 class="section-h">Ground rules.</h2>
+      </header>
+      <ul class="bare rules">
+        {notCovered.map((r) => <li>{r}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section shell">
+    <Eyebrow number="04" label="The project" />
+    <dl class="dl facts">
+      {facts.map(([k, v]) => (
+        <>
+          <dt>{k}</dt>
+          <dd>{v}</dd>
+        </>
+      ))}
+    </dl>
+  </section>
+
+  <section class="section shell closing">
+    <Eyebrow number="05" label="Book the call" />
+    <p class="closing__line">Pick a 20-minute slot. It lands on both calendars with a phone or video option.</p>
+    <p class="actions">
+      <a href={BOOK} class="btn" rel="noopener">Choose a time</a>
+      <a href="mailto:dhalibur@asu.edu?subject=ASU%20capstone%20interview" class="btn btn--ghost">dhalibur@asu.edu</a>
+    </p>
+    <p class="muted fine">This page is unlisted and shared by direct link only. It is not indexed.</p>
+  </section>
+</Layout>
+
+<style>
+  .page-head { padding-block: clamp(4rem, 3rem + 6vw, 8rem) var(--space-6); }
+  .page-head__h { margin-top: var(--space-4); max-width: 20ch; }
+  .page-head__lead { margin-top: var(--space-5); }
+  .meta { margin-top: var(--space-4); color: var(--ink-muted); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: var(--space-5) var(--space-6);
+    align-items: start;
+  }
+  @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+  .section-h { margin-top: var(--space-4); }
+
+  .prose { max-width: var(--measure); }
+  .prose p + p { margin-top: var(--space-3); }
+
+  .intro { margin-top: var(--space-4); }
+  .themes {
+    counter-reset: theme;
+    list-style: none;
+    padding: 0;
+    margin: var(--space-4) 0 0;
+    max-width: var(--measure);
+    border-top: 1px solid var(--rule-strong);
+  }
+  .themes li {
+    counter-increment: theme;
+    display: grid;
+    grid-template-columns: 3.5rem 1fr;
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+  }
+  .themes li::before {
+    content: counter(theme, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    padding-top: 0.3em;
+  }
+
+  .rules { display: flex; flex-direction: column; gap: var(--space-3); max-width: var(--measure); }
+  .rules li { padding-left: var(--space-4); position: relative; }
+  .rules li::before {
+    content: "";
+    position: absolute; left: 0; top: 0.7em;
+    width: 0.9rem; height: 1px; background: var(--accent);
+  }
+
+  .facts { margin-top: var(--space-4); }
+
+  .closing__line { margin-top: var(--space-4); font-size: var(--text-lg); max-width: 30ch; letter-spacing: -0.01em; }
+  .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+  .fine { margin-top: var(--space-5); font-size: var(--text-sm); }
+</style>

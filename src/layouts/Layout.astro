@@ -7,10 +7,13 @@ import Footer from "../components/Footer.astro";
 interface Props {
   title: string;
   description?: string;
+  /** Unlisted pages: emit robots noindex/nofollow. */
+  noindex?: boolean;
 }
 const {
   title,
-  description = "Mission-critical NDT engineering for aerospace. Haliburton NDT Engineering Consultants — ASNT Level III in UT, PT, MT, ET. Denver, CO."
+  description = "Mission-critical NDT engineering for aerospace. Haliburton NDT Engineering Consultants — ASNT Level III in UT, PT, MT, ET. Denver, CO.",
+  noindex = false,
 } = Astro.props;
 const fullTitle = title === "Home"
   ? "Haliburton NDT Engineering Consultants"
@@ -25,6 +28,7 @@ const fullTitle = title === "Home"
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
 
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
