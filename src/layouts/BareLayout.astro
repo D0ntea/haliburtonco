@@ -1,0 +1,58 @@
+---
+// Standalone layout: same tokens and base styles as the site, but no
+// site header, nav, or footer. Used for unlisted pages that should not
+// read as part of the HNEC marketing site. Always noindex.
+import "../styles/tokens.css";
+import "../styles/base.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = "" } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f5f2ea" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" />
+  </head>
+  <body>
+    <main id="main">
+      <slot />
+    </main>
+    <script>
+      function initReveal() {
+        const els = document.querySelectorAll<HTMLElement>("[data-reveal]:not(.is-revealed)");
+        if (!("IntersectionObserver" in window) || els.length === 0) {
+          els.forEach((el) => el.classList.add("is-revealed"));
+          return;
+        }
+        const io = new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-revealed");
+              io.unobserve(entry.target);
+            }
+          }
+        }, { rootMargin: "0px 0px -10% 0px", threshold: 0.05 });
+        els.forEach((el) => io.observe(el));
+      }
+      initReveal();
+    </script>
+  </body>
+</html>

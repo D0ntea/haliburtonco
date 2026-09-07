@@ -2,7 +2,7 @@
 // Unlisted interview brief for the ASU MEE 488 senior capstone (Team 9).
 // Reached only by direct link from interview-request emails. Not in the
 // nav, not in any sitemap, robots noindex. Employer stays off this page.
-import Layout from "../../layouts/Layout.astro";
+import Layout from "../../layouts/BareLayout.astro";
 import Eyebrow from "../../components/Eyebrow.astro";
 
 const BOOK = "https://calendly.com/haliburton-ndt/asu-capstone-interview";
@@ -23,6 +23,17 @@ const themes = [
   "Who decides to adopt equipment like this, and what they would need to see first.",
 ];
 
+const team = [
+  ["Hayden Wachs", "Team lead"],
+  ["Dontea Haliburton", "Documentation lead · user interviews"],
+  ["Jason Del Aguila", "Presentation lead · users and customers"],
+  ["Jordan Strickland", "Requirements"],
+  ["Alex Ignacio-Gamez", "Prototyping and test"],
+  ["Toby Becker", "Benchmarking"],
+  ["Chandler Brignac", "Benchmarking · users"],
+  ["Davinder Singh", "Benchmarking · interviews"],
+];
+
 const notCovered = [
   "No sales pitch. There is no product. Nothing to buy, trial, or endorse.",
   "No proprietary detail needed. Procedures, incident specifics, and customer names stay with you.",
@@ -31,9 +42,8 @@ const notCovered = [
 ];
 ---
 <Layout
-  title="Interview brief — ASU Capstone"
+  title="Interview brief — ASU MEE 488 capstone, Team 9"
   description="Background for a 20-minute user interview on precision aerial delivery in terrain where aircraft cannot land. ASU MEE 488 senior capstone, Team 9."
-  noindex
 >
   <section class="page-head shell">
     <Eyebrow number="00" label="Interview brief · unlisted" />
@@ -102,8 +112,21 @@ const notCovered = [
     </dl>
   </section>
 
+  <section class="section shell">
+    <Eyebrow number="05" label="Meet the team" />
+    <p class="muted intro">Eight mechanical engineering seniors at Arizona State University, Fall 2026. Roles from the team charter.</p>
+    <ul class="bare team">
+      {team.map(([name, role]) => (
+        <li>
+          <span class="team__name">{name}</span>
+          <span class="team__role">{role}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
   <section class="section shell closing">
-    <Eyebrow number="05" label="Book the call" />
+    <Eyebrow number="06" label="Book the call" />
     <p class="closing__line">Pick a 20-minute slot. It lands on both calendars with a phone or video option.</p>
     <p class="actions">
       <a href={BOOK} class="btn" rel="noopener">Choose a time</a>
@@ -166,6 +189,30 @@ const notCovered = [
   }
 
   .facts { margin-top: var(--space-4); }
+
+  .team {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 0 var(--space-5);
+    margin-top: var(--space-4);
+    max-width: var(--content-max);
+    border-top: 1px solid var(--rule-strong);
+  }
+  .team li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+  }
+  .team__name { font-weight: 500; letter-spacing: -0.01em; }
+  .team__role {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
 
   .closing__line { margin-top: var(--space-4); font-size: var(--text-lg); max-width: 30ch; letter-spacing: -0.01em; }
   .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
