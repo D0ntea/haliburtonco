@@ -6,6 +6,19 @@ import Layout from "../../layouts/BareLayout.astro";
 import Eyebrow from "../../components/Eyebrow.astro";
 
 const BOOK = "https://calendly.com/haliburton-ndt/asu-capstone-interview";
+const FORM = "https://forms.gle/ScFGBcbNfWmfbeQu5";
+
+const flow = [
+  ["0–2 min", "Who we are", "One sentence on the project, and a check that you are comfortable with how we use what you tell us."],
+  ["2–15 min", "Your story", "The six themes below, in whatever order fits. We follow your experience, not a script."],
+  ["15–20 min", "Your questions", "Anything you want to know about the project, and who else you think we should talk to."],
+];
+
+const after = [
+  ["We write it up", "A short summary for the course: first name, role, and the three to six things you told us that matter most."],
+  ["You get a copy", "We send you the summary if you want it, and correct anything we got wrong."],
+  ["That is it", "No follow-ups unless you ask for them. If the project moves forward we may ask to show you what we built."],
+];
 
 const facts = [
   ["Program", "Arizona State University — MEE 488, Mechanical Engineering Design I (senior capstone), Fall 2026."],
@@ -53,15 +66,27 @@ const notCovered = [
     </div>
   </div>
   <section class="page-head shell">
-    <Eyebrow number="00" label="Interview brief · unlisted" />
-    <h1 class="page-head__h">Getting a package to the ground where nothing can land.</h1>
-    <p class="lead page-head__lead">
-      A senior engineering team at Arizona State University is studying precision aerial delivery for
-      places a delivery drone cannot land and a helicopter should not: a fire line, a mountainside, a
-      cave or canyon with no road in. Before we design anything we want twenty minutes with the people
-      who do this work.
-    </p>
-    <p class="meta"><span class="cred">MEE 488 · Team 9 · Fall 2026</span></p>
+    <div class="hero">
+      <div class="hero__text">
+        <Eyebrow number="00" label="Interview brief · unlisted" />
+        <h1 class="page-head__h">Getting a package to the ground where nothing can land.</h1>
+        <p class="lead page-head__lead">
+          A senior engineering team at Arizona State University is studying precision aerial delivery
+          for places a delivery drone cannot land and a helicopter should not: a fire line, a
+          mountainside, a cave or canyon with no road in. Before we design anything we want twenty
+          minutes with the people who do this work.
+        </p>
+        <p class="meta"><span class="cred">MEE 488 · Team 9 · Fall 2026</span></p>
+      </div>
+      <aside class="help" aria-labelledby="help-h">
+        <p class="help__eyebrow">Two ways to help</p>
+        <h2 id="help-h" class="help__h">Pick whichever costs you less time.</h2>
+        <a href={BOOK} class="btn help__btn" rel="noopener">Book a 20-minute call</a>
+        <p class="help__or">or</p>
+        <a href={FORM} class="btn btn--ghost help__btn" rel="noopener">Answer six questions in writing</a>
+        <p class="help__fine">About ten minutes. No account needed. Nothing to buy, ever.</p>
+      </aside>
+    </div>
   </section>
 
   <section class="section shell">
@@ -93,12 +118,29 @@ const notCovered = [
     <ol class="themes">
       {themes.map((t) => <li>{t}</li>)}
     </ol>
+    <p class="themes__note">
+      Rather type than talk? The same six questions are here:
+      <a href={FORM} rel="noopener">answer in writing</a>. Skip any you like.
+    </p>
+  </section>
+
+  <section class="section shell">
+    <Eyebrow number="03" label="How the twenty minutes go" />
+    <ol class="flow">
+      {flow.map(([t, h, d]) => (
+        <li>
+          <span class="flow__time">{t}</span>
+          <span class="flow__h">{h}</span>
+          <span class="flow__d">{d}</span>
+        </li>
+      ))}
+    </ol>
   </section>
 
   <section class="section shell">
     <div class="grid-2">
       <header>
-        <Eyebrow number="03" label="What this is not" />
+        <Eyebrow number="04" label="What this is not" />
         <h2 class="section-h">Ground rules.</h2>
       </header>
       <ul class="bare rules">
@@ -108,7 +150,19 @@ const notCovered = [
   </section>
 
   <section class="section shell">
-    <Eyebrow number="04" label="The project" />
+    <Eyebrow number="05" label="What happens after" />
+    <ol class="flow flow--after">
+      {after.map(([h, d]) => (
+        <li>
+          <span class="flow__h">{h}</span>
+          <span class="flow__d">{d}</span>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="section shell">
+    <Eyebrow number="06" label="The project" />
     <dl class="dl facts">
       {facts.map(([k, v]) => (
         <>
@@ -120,7 +174,7 @@ const notCovered = [
   </section>
 
   <section class="section shell">
-    <Eyebrow number="05" label="Meet the team" />
+    <Eyebrow number="07" label="Meet the team" />
     <p class="muted intro">Eight mechanical engineering seniors at Arizona State University, Fall 2026. Roles from the team charter.</p>
     <ul class="bare team">
       {team.map(([name, role]) => (
@@ -133,12 +187,13 @@ const notCovered = [
   </section>
 
   <section class="section shell closing">
-    <Eyebrow number="06" label="Book the call" />
-    <p class="closing__line">Pick a 20-minute slot. It lands on both calendars with a phone or video option.</p>
+    <Eyebrow number="08" label="Help us out" />
+    <p class="closing__line">Twenty minutes on a call, or ten minutes typing. Either one moves the project.</p>
     <p class="actions">
-      <a href={BOOK} class="btn" rel="noopener">Choose a time</a>
-      <a href="mailto:dhalibur@asu.edu?subject=ASU%20capstone%20interview" class="btn btn--ghost">dhalibur@asu.edu</a>
+      <a href={BOOK} class="btn" rel="noopener">Book a 20-minute call</a>
+      <a href={FORM} class="btn btn--ghost" rel="noopener">Answer in writing</a>
     </p>
+    <p class="muted contact">Questions first? <a href="mailto:dhalibur@asu.edu?subject=ASU%20capstone%20interview">dhalibur@asu.edu</a></p>
     <p class="muted fine">This page is unlisted and shared by direct link only. It is not indexed.</p>
   </section>
 </Layout>
@@ -178,7 +233,51 @@ const notCovered = [
   .band__school { font-weight: 700; }
   .band__prog { opacity: 0.92; }
 
-  .page-head { padding-block: clamp(4rem, 3rem + 6vw, 8rem) var(--space-6); }
+  .page-head { padding-block: clamp(3rem, 2rem + 5vw, 6rem) var(--space-6); }
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
+    gap: var(--space-6);
+    align-items: start;
+  }
+  @media (max-width: 860px) { .hero { grid-template-columns: 1fr; } }
+  .help {
+    border: 2px solid var(--accent);
+    padding: var(--space-4);
+    background: var(--bg-elev);
+    position: sticky; top: var(--space-4);
+  }
+  .help__eyebrow {
+    font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 var(--space-2);
+  }
+  .help__h { font-size: var(--text-lg); line-height: 1.25; letter-spacing: -0.01em; margin: 0 0 var(--space-4); }
+  .help__btn { width: 100%; justify-content: center; }
+  .help__or {
+    text-align: center; margin: var(--space-2) 0; color: var(--ink-muted);
+    font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .help__fine { margin: var(--space-3) 0 0; font-size: var(--text-sm); color: var(--ink-muted); }
+
+  .themes__note { margin-top: var(--space-4); max-width: var(--measure); color: var(--ink-muted); }
+  .themes__note a { color: var(--accent); font-weight: 700; }
+
+  .flow {
+    list-style: none; padding: 0; margin: var(--space-4) 0 0;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4);
+  }
+  @media (max-width: 760px) { .flow { grid-template-columns: 1fr; } }
+  .flow li {
+    display: flex; flex-direction: column; gap: var(--space-2);
+    padding-top: var(--space-3); border-top: 4px solid var(--gold);
+  }
+  .flow__time { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  .flow__h { font-size: var(--text-lg); font-weight: 700; letter-spacing: -0.01em; }
+  .flow__d { color: var(--ink-muted); max-width: 34ch; }
+  .flow--after li { border-top-color: var(--accent); }
+
+  .contact { margin-top: var(--space-4); }
+  .contact a { color: var(--accent); font-weight: 700; }
   .page-head__h { margin-top: var(--space-4); max-width: 20ch; position: relative; padding-bottom: var(--space-3); }
   .page-head__h::after {
     content: ""; position: absolute; left: 0; bottom: 0;
