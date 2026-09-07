@@ -2,7 +2,7 @@
 
 ## What this project is
 
-Marketing site for **Haliburton NDT Engineering Consultants, LLC** — a veteran-owned, aerospace-focused NDT consultancy. Built with Astro, deployed on Vercel, source at `D0ntea/haliburtonco` (private).
+Marketing site for **Haliburton NDT Engineering Consultants, LLC** — a veteran-owned, aerospace-focused NDT consultancy. Built with Astro, deployed on **GitHub Pages** via `.github/workflows/deploy.yml` (push to `main` builds and publishes; migrated off Vercel 2026-06-16), source at `D0ntea/haliburtonco` (private).
 
 ## Voice and positioning
 
@@ -37,10 +37,14 @@ npm install         # first time only
 npm run dev         # http://localhost:4321
 # edit src/pages/*.astro
 git add -A && git commit -m "..." && git push
-# Vercel auto-deploys from main
+# GitHub Actions builds + deploys to Pages (~40s); check with: gh run list -L 1
 ```
 
-Changes go live within ~30s of push. No manual deploy needed (GitHub integration is wired).
+Changes go live about a minute after push. Before pushing, `git fetch` and make sure you are on top of `origin/main` — a stale local clone silently diverged once (2026-09-07).
+
+## Unlisted pages
+
+Pages that must not be discoverable (student/capstone briefs, homework pages) pass `noindex` to `Layout` (emits robots noindex/nofollow), get a non-guessable slug under `src/pages/brief/` or similar, and are never linked from the nav. There is no sitemap integration. Current: `/brief/aerial-delivery-x7q4` (ASU MEE 488 capstone interview brief, 2026-09).
 
 ## Source-of-truth content
 
