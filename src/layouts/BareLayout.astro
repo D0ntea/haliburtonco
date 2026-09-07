@@ -8,11 +8,13 @@ import "../styles/base.css";
 interface Props {
   title: string;
   description?: string;
+  /** Optional page theme; sets data-theme on <html> so a page can re-skin the tokens. */
+  theme?: string;
 }
-const { title, description = "" } = Astro.props;
+const { title, description = "", theme } = Astro.props;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme={theme}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -25,7 +27,7 @@ const { title, description = "" } = Astro.props;
     <meta property="og:type" content="website" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="color-scheme" content="light" />
-    <meta name="theme-color" content="#f5f2ea" />
+    <meta name="theme-color" content={theme === "asu" ? "#8C1D40" : "#f5f2ea"} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet"
