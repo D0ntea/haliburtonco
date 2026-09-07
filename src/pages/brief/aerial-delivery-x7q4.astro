@@ -10,7 +10,7 @@ const FORM = "https://forms.gle/ScFGBcbNfWmfbeQu5";
 
 const flow = [
   ["0–2 min", "Who we are", "One sentence on the project, and a check that you are comfortable with how we use what you tell us."],
-  ["2–15 min", "Your story", "The six themes below, in whatever order fits. We follow your experience, not a script."],
+  ["2–15 min", "Your story", "The eight questions below, in whatever order fits. We follow your experience, not a script."],
   ["15–20 min", "Your questions", "Anything you want to know about the project, and who else you think we should talk to."],
 ];
 
@@ -28,12 +28,14 @@ const facts = [
 ];
 
 const themes = [
-  "The last time a landing site was refused, and what made the call.",
-  "What happens to the patient, the crew, or the supplies when the aircraft cannot land.",
-  "What rough or unprepared ground does to the aircraft, and what that costs.",
-  "What would need to be delivered, how heavy, how fragile, and how close it has to land to be useful.",
-  "What would make you distrust or refuse a system that drops a package instead of landing.",
-  "Who decides to adopt equipment like this, and what they would need to see first.",
+  "Tell us about the last time you couldn't land where you needed to. What made the call?",
+  "When you can't land, what happens to the patient, crew, or supplies today, and how long does that take?",
+  "If something could be dropped to the ground without landing, what would you actually send? Roughly how heavy, and what must survive the trip intact?",
+  "How close would it need to land to be useful? A specific spot, or anywhere inside a safe area?",
+  "Think of a piece of gear you rely on out there. What earned your trust, and what would make you stop trusting it? If a drop failed on a real call, what would that cost?",
+  "What ground and weather are you working in when this matters most? Slope, rock, snow, water, wind, dark.",
+  "In the field, how much fuss can this take? Seconds to hook it up, or does anything slower kill it? Who'd end up looking after it?",
+  "Who would decide to adopt something like this, and what would they need to see first?",
 ];
 
 const team = [
@@ -83,7 +85,7 @@ const notCovered = [
         <h2 id="help-h" class="help__h">Pick whichever costs you less time.</h2>
         <a href={BOOK} class="btn help__btn" rel="noopener">Book a 20-minute call</a>
         <p class="help__or">or</p>
-        <a href={FORM} class="btn btn--ghost help__btn" rel="noopener">Answer six questions in writing</a>
+        <a href={FORM} class="btn btn--ghost help__btn" rel="noopener">Answer eight questions in writing</a>
         <p class="help__fine">About ten minutes. No account needed. Nothing to buy, ever.</p>
       </aside>
     </div>
@@ -114,12 +116,12 @@ const notCovered = [
 
   <section class="section shell">
     <Eyebrow number="02" label="What we would ask" />
-    <p class="muted intro">Six themes. Your story and your judgment matter more than exact numbers.</p>
+    <p class="muted intro">Eight questions. Your story and your judgment matter more than exact numbers. Skip any that do not apply.</p>
     <ol class="themes">
       {themes.map((t) => <li>{t}</li>)}
     </ol>
     <p class="themes__note">
-      Rather type than talk? The same six questions are here:
+      Rather type than talk? The same eight questions are here:
       <a href={FORM} rel="noopener">answer in writing</a>. Skip any you like.
     </p>
   </section>
