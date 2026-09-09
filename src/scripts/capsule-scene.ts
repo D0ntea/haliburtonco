@@ -20,7 +20,11 @@
 //    fought the first. This is scroll only, and the canvas takes no pointer
 //    events at all.
 //
-// 5. Rendering is dirty-flagged and stops when nothing is moving.
+// 5. One animation loop, alive while any scene is on screen, recomputing which
+//    scene is active and where it should be from the rects every frame. Earlier
+//    versions kept per-scene run flags and only restarted on an observed target
+//    change, which stranded whichever scene was inactive at the wrong moment.
+//    The render itself is skipped when nothing moved.
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
@@ -123,14 +127,15 @@ interface Scene3D {
 const scenes: Scene3D[] = [];
 let pending: HTMLElement[] = [];
 let active: Scene3D | null = null;
-let running = false;
-let dirty = true;
+let loop = 0;
 let pass = 0;
+let lastDrawn = -1;
+let lastScene: Scene3D | null = null;
 
+// setTimeout, not requestAnimationFrame: a tab that starts hidden never fires
+// rAF, and booting must not wait on paint.
 function schedulePass() {
   if (pass) return;
-  // setTimeout, not rAF: a tab that starts hidden never fires rAF and the
-  // scenes would never boot.
   pass = window.setTimeout(() => {
     pass = 0;
     for (let i = pending.length - 1; i >= 0; i--) {
@@ -140,23 +145,33 @@ function schedulePass() {
       pending.splice(i, 1);
       boot(el).catch((err) => console.error("[capsule-scene] boot failed", err));
     }
-    layout();
+    ensureLoop();
   });
 }
 
-/** Pick the scene closest to filling the viewport and give it the canvas. */
-function layout() {
+function railProgress(s: Scene3D): number {
+  const r = s.rail.getBoundingClientRect();
+  const span = r.height - window.innerHeight;
+  if (span <= 0) return s.target;
+  return Math.min(1, Math.max(0, -r.top / span));
+}
+
+function coverage(s: Scene3D): number {
+  const r = s.rail.getBoundingClientRect();
+  return Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+}
+
+/** Whichever scene covers most of the viewport owns the shared canvas. */
+function pickActive(): Scene3D | null {
   let best: Scene3D | null = null;
   let bestCover = 0;
   for (const s of scenes) {
-    const r = s.rail.getBoundingClientRect();
-    const cover = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
-    if (cover > bestCover) {
-      bestCover = cover;
+    const c = coverage(s);
+    if (c > bestCover) {
+      bestCover = c;
       best = s;
     }
   }
-
   if (best && best !== active) {
     const { canvas } = sharedRenderer();
     active?.stage.removeAttribute("data-live");
@@ -164,23 +179,8 @@ function layout() {
     best.stage.setAttribute("data-live", "");
     active = best;
     resize();
-    dirty = true;
-    start();
   }
-
-  for (const s of scenes) {
-    const r = s.rail.getBoundingClientRect();
-    const span = r.height - window.innerHeight;
-    if (span <= 0) continue;
-    s.target = Math.min(1, Math.max(0, -r.top / span));
-  }
-
-  // Resume whenever the active scene is not where it should be, rather than
-  // only when its target happens to change on this pass. Gating on a change
-  // could strand a scene mid-separation: if the pass that moved it back toward
-  // assembled arrived while it was not the active scene, nothing ever restarted
-  // the loop and it stayed stuck open.
-  if (active && Math.abs(active.target - active.shown) > 0.0006) start();
+  return best;
 }
 
 function resize() {
@@ -191,7 +191,7 @@ function resize() {
   renderer.setSize(w, h, false);
   active.camera.aspect = w / h;
   active.camera.updateProjectionMatrix();
-  dirty = true;
+  lastDrawn = -1; // force a redraw at the new size
 }
 
 function draw(s: Scene3D) {
@@ -209,29 +209,31 @@ function draw(s: Scene3D) {
   sharedRenderer().renderer.render(s.scene, s.camera);
 }
 
-function frame() {
-  const s = active;
-  if (!s) {
-    running = false;
-    return;
+// One loop, alive for as long as any scene is on screen. Earlier versions kept
+// per-scene run flags and only restarted the loop when a target was observed to
+// change, which stranded whichever scene happened to be inactive at the wrong
+// moment. Recomputing from the rects every frame cannot get out of step; the
+// render itself is skipped when nothing moved, so an idle scene costs nothing.
+function tick() {
+  const on = pickActive();
+  if (!on) {
+    loop = 0;
+    return; // nothing on screen; a scroll or resize will restart us
   }
-  const delta = s.target - s.shown;
-  const settling = !s.reduced && Math.abs(delta) > 0.0006;
-  s.shown += settling ? delta * 0.15 : delta;
+  on.target = railProgress(on);
+  const d = on.target - on.shown;
+  on.shown += !on.reduced && Math.abs(d) > 0.0006 ? d * 0.15 : d;
 
-  if (settling || dirty) {
-    dirty = false;
-    draw(s);
-    requestAnimationFrame(frame);
-  } else {
-    running = false;
+  if (on !== lastScene || on.shown !== lastDrawn) {
+    draw(on);
+    lastScene = on;
+    lastDrawn = on.shown;
   }
+  loop = requestAnimationFrame(tick);
 }
 
-function start() {
-  if (running) return;
-  running = true;
-  requestAnimationFrame(frame);
+function ensureLoop() {
+  if (!loop) loop = requestAnimationFrame(tick);
 }
 
 async function boot(section: HTMLElement) {
@@ -319,11 +321,10 @@ async function boot(section: HTMLElement) {
 
   new ResizeObserver(() => {
     if (active === s) resize();
-    start();
+    ensureLoop();
   }).observe(stage);
 
-  layout();
-  start();
+  ensureLoop();
 }
 
 export function initCapsuleScenes() {
