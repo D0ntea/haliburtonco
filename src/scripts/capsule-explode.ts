@@ -1,44 +1,53 @@
 // Scroll-driven exploded views for the capsule concept models.
 // Loaded dynamically by the ideation page only when a viewer nears the viewport.
 //
-// Deliberately does not rely on IntersectionObserver. Some embedded and
-// non-painting browser contexts never fire it, which would leave the viewer
-// stuck on its poster. Rect checks in a single passive scroll pass are cheap
-// and work everywhere.
+// Two deliberate choices:
+//
+// 1. Separation is purely vertical. An earlier version pushed the legs and
+//    isolators radially outward as well, which read as the whole object
+//    swelling rather than an assembly coming apart in order.
+//
+// 2. Rendering is dirty-flagged and the loop stops once the model settles and
+//    the camera is still. Two continuously rendering WebGL canvases on a page
+//    the user is scrolling was the cause of the jank.
+//
+// It also avoids IntersectionObserver and requestAnimationFrame for boot, since
+// a tab that starts hidden fires neither and the viewer would never start.
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-type Dir = [number, number, number] | "radial";
-type Rule = [RegExp, Dir, number];
-
-/** How far each named part travels, and in what direction, at full separation.
- *  Distances are in model-radius units after the model is normalised. */
-const RULES: Record<string, Rule[]> = {
+/** Vertical offset for each named part at full separation, in units where the
+ *  whole assembled model is about two units across. Ordered top to bottom so
+ *  the list reads like the exploded stack itself. */
+const RULES: Record<string, [RegExp, number][]> = {
   concept1: [
-    [/^OuterShell_Top$/, [0, 1, 0], 1.35],
-    [/^Equator_Seam$/, [0, 1, 0], 0.9],
-    [/^CrushLayer$/, [0, 1, 0], 0.55],
-    [/^PayloadSphere$/, [0, 0, 0], 0],
-    [/^Ballast$/, [0, -1, 0], 0.5],
-    [/^OuterShell_Bottom$/, [0, -1, 0], 1.2],
-    [/^Leg\d_(Boss|Strut|Foot)$/, "radial", 1.0],
+    [/^OuterShell_Top$/, 0.95],
+    [/^Equator_Seam$/, 0.6],
+    [/^CrushLayer$/, 0.36],
+    [/^PayloadSphere$/, 0],
+    [/^Ballast$/, -0.34],
+    [/^OuterShell_Bottom$/, -0.84],
+    [/^Leg\d_(Boss|Strut|Foot)$/, -1.24],
   ],
   concept2: [
-    [/^ShellTop$/, [0, 1, 0], 1.35],
-    [/^IndicatorLens$/, [0, 1, 0], 1.75],
-    [/^Equator_Seam$/, [0, 1, 0], 0.9],
-    [/^PayloadBox$/, [0, 0, 0], 0],
-    [/^Isolator_\d$/, "radial", 0.45],
-    [/^Isolator_\d_Ring/, "radial", 0.6],
-    [/^Electronics_[AB]$/, [0, -1, 0], 0.62],
-    [/^ShellBottom$/, [0, -1, 0], 1.2],
-    [/^Leg\d_(Boss|Strut|Foot)$/, "radial", 1.0],
+    [/^IndicatorLens$/, 1.24],
+    [/^ShellTop$/, 0.95],
+    [/^Equator_Seam$/, 0.6],
+    [/^PayloadBox$/, 0],
+    [/^Isolator_\d(_Ring.*)?$/, -0.32],
+    [/^Electronics_[AB]$/, -0.58],
+    [/^ShellBottom$/, -0.84],
+    [/^Leg\d_(Boss|Strut|Foot)$/, -1.24],
   ],
 };
 
-function ruleFor(concept: string, name: string): Rule | null {
-  for (const r of RULES[concept] ?? []) if (r[0].test(name)) return r;
+/** How much the assembly shrinks at full separation, so a taller stack stays
+ *  inside the frame without fighting the user's orbit or zoom. */
+const SHRINK = 0.3;
+
+function offsetFor(concept: string, name: string): number | null {
+  for (const [re, dy] of RULES[concept] ?? []) if (re.test(name)) return dy;
   return null;
 }
 
@@ -58,22 +67,16 @@ function nearViewport(el: Element, margin: number): boolean {
 
 interface Part {
   obj: THREE.Object3D;
-  base: THREE.Vector3;
-  offset: THREE.Vector3;
+  baseY: number;
+  dy: number;
 }
 
-interface Viewer {
-  section: HTMLElement;
-  rail: HTMLElement;
-  update: () => void;
-}
-
-const viewers: Viewer[] = [];
+const viewers: { update: () => void }[] = [];
 let pending: HTMLElement[] = [];
 let pass = 0;
 
 // setTimeout rather than requestAnimationFrame: a tab that starts hidden never
-// fires rAF, and booting must not wait on paint. Rendering still uses rAF.
+// fires rAF, and booting must not wait on paint.
 function schedulePass() {
   if (pass) return;
   pass = window.setTimeout(() => {
@@ -83,7 +86,6 @@ function schedulePass() {
       if (!nearViewport(section, 700)) continue;
       pending.splice(i, 1);
       boot(section).catch((err) => {
-        // Poster stays in place; the page still reads correctly.
         console.error("[capsule-explode] boot failed", err);
       });
     }
@@ -106,8 +108,15 @@ async function boot(section: HTMLElement) {
 
   const gltf = await new GLTFLoader().loadAsync(src);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: true,
+    powerPreference: "high-performance",
+  });
+  // 1.5 rather than 2: on a Retina panel the extra fragments cost far more than
+  // they show on a line-art model.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setClearColor(0x000000, 0);
 
   const scene = new THREE.Scene();
@@ -126,7 +135,7 @@ async function boot(section: HTMLElement) {
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
   controls.enablePan = false;
-  controls.minDistance = 2.2;
+  controls.minDistance = 2.4;
   controls.maxDistance = 8;
 
   const root = new THREE.Group();
@@ -137,34 +146,22 @@ async function boot(section: HTMLElement) {
   const centre = box.getCenter(new THREE.Vector3());
   const radius = box.getSize(new THREE.Vector3()).length() / 2 || 1;
   model.position.sub(centre);
-  root.scale.setScalar(1 / radius);
+  const baseScale = 1 / radius;
+  root.scale.setScalar(baseScale);
   root.add(model);
 
   const parts: Part[] = [];
-  const partBox = new THREE.Box3();
-  const partCentre = new THREE.Vector3();
   model.traverse((o) => {
     if (!(o as THREE.Mesh).isMesh) return;
-    const rule = ruleFor(concept, o.name || o.parent?.name || "");
-    if (!rule) return;
-    const [, dir, dist] = rule;
-    if (dist === 0) return;
-
-    let v: THREE.Vector3;
-    if (dir === "radial") {
-      partBox.setFromObject(o).getCenter(partCentre);
-      v = new THREE.Vector3(partCentre.x, 0, partCentre.z);
-      if (v.lengthSq() < 1e-6) v.set(1, 0, 0);
-      v.normalize().setY(-0.35).normalize();
-    } else {
-      v = new THREE.Vector3(...dir).normalize();
-    }
-    parts.push({ obj: o, base: o.position.clone(), offset: v.multiplyScalar(dist * radius) });
+    const dy = offsetFor(concept, o.name || o.parent?.name || "");
+    if (dy === null || dy === 0) return;
+    parts.push({ obj: o, baseY: o.position.y, dy: dy * radius });
   });
 
   let target = 0;
-  let shown = -1;
+  let shown = 0;
   let running = false;
+  let dirty = true;
 
   function resize() {
     const w = Math.max(1, stage.clientWidth);
@@ -172,20 +169,31 @@ async function boot(section: HTMLElement) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    dirty = true;
   }
 
   function draw() {
-    for (const p of parts) p.obj.position.copy(p.base).addScaledVector(p.offset, shown);
+    for (const p of parts) p.obj.position.y = p.baseY + p.dy * shown;
+    root.scale.setScalar(baseScale * (1 - SHRINK * shown));
     bar.style.width = `${Math.round(shown * 100)}%`;
-    controls.update();
     renderer.render(scene, camera);
   }
 
   function frame() {
     const delta = target - shown;
-    shown += Math.abs(delta) < 0.0008 ? delta : delta * 0.14;
-    draw();
-    if (running) requestAnimationFrame(frame);
+    const settling = Math.abs(delta) > 0.0006;
+    shown += settling ? delta * 0.16 : delta;
+
+    // OrbitControls returns true while damping is still easing the camera.
+    const camMoving = controls.update();
+
+    if (settling || camMoving || dirty) {
+      dirty = false;
+      draw();
+      requestAnimationFrame(frame);
+    } else {
+      running = false; // settled and still: stop burning frames
+    }
   }
 
   function start() {
@@ -194,12 +202,7 @@ async function boot(section: HTMLElement) {
     requestAnimationFrame(frame);
   }
 
-  function stop() {
-    running = false;
-  }
-
   resize();
-  shown = 0;
   draw();
   canvas.hidden = false;
   canvas.removeAttribute("aria-hidden");
@@ -207,11 +210,12 @@ async function boot(section: HTMLElement) {
 
   new ResizeObserver(() => {
     resize();
-    draw();
+    start();
   }).observe(stage);
 
   controls.addEventListener("change", () => {
-    if (!running) draw();
+    dirty = true;
+    start();
   });
 
   if (reduced) {
@@ -224,22 +228,21 @@ async function boot(section: HTMLElement) {
     slider.addEventListener("input", () => {
       target = Number(slider.value) / 100;
       start();
-      setTimeout(stop, 900);
     });
-    viewers.push({ section, rail, update() {} });
+    viewers.push({ update() {} });
     return;
   }
 
   viewers.push({
-    section,
-    rail,
     update() {
       const r = rail.getBoundingClientRect();
-      const onScreen = r.bottom > -200 && r.top < window.innerHeight + 200;
+      if (r.bottom < -200 || r.top > window.innerHeight + 200) return;
       const span = r.height - window.innerHeight;
-      if (span > 0) target = Math.min(1, Math.max(0, -r.top / span));
-      if (onScreen) start();
-      else stop();
+      if (span <= 0) return;
+      const next = Math.min(1, Math.max(0, -r.top / span));
+      if (Math.abs(next - target) < 0.0005) return;
+      target = next;
+      start();
     },
   });
   start();
@@ -255,7 +258,6 @@ export function initCapsuleExplode() {
   window.addEventListener("resize", schedulePass, { passive: true });
   document.addEventListener("visibilitychange", schedulePass);
   schedulePass();
-  // Safety net for contexts that report a stale layout on first paint.
   setTimeout(schedulePass, 400);
   setTimeout(schedulePass, 1500);
 }
