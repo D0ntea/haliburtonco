@@ -3,9 +3,9 @@
 //
 // Two deliberate choices:
 //
-// 1. Separation is purely vertical. An earlier version pushed the legs and
-//    isolators radially outward as well, which read as the whole object
-//    swelling rather than an assembly coming apart in order.
+// 1. Both GLB files are Z-up. Three.js is Y-up, so the root is rotated a
+//    quarter turn about X to stand the capsule upright, and parts separate
+//    along their local Z, which is the model's own vertical.
 //
 // 2. Nothing is scaled while separating. Shrinking the assembly to keep a
 //    taller stack in frame moved every part inward on X and Z too, which read
@@ -21,28 +21,28 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-/** Vertical offset for each named part at full separation, in units where the
- *  whole assembled model is about two units across. Ordered top to bottom so
- *  the list reads like the exploded stack itself. */
+/** Separation offset for each named part, along the model's own up axis (local
+ *  Z, since these files are Z-up). Units are model radii. Ordered top to bottom
+ *  so the list reads like the exploded stack itself. */
 const RULES: Record<string, [RegExp, number][]> = {
   concept1: [
-    [/^OuterShell_Top$/, 0.95],
-    [/^Equator_Seam$/, 0.6],
-    [/^CrushLayer$/, 0.36],
+    [/^OuterShell_Top$/, 0.78],
+    [/^Equator_Seam$/, 0.5],
+    [/^CrushLayer$/, 0.3],
     [/^PayloadSphere$/, 0],
-    [/^Ballast$/, -0.34],
-    [/^OuterShell_Bottom$/, -0.84],
-    [/^Leg\d_(Boss|Strut|Foot)$/, -1.24],
+    [/^Ballast$/, -0.28],
+    [/^OuterShell_Bottom$/, -0.7],
+    [/^Leg\d_(Boss|Strut|Foot)$/, -1.02],
   ],
   concept2: [
-    [/^IndicatorLens$/, 1.24],
-    [/^ShellTop$/, 0.95],
-    [/^Equator_Seam$/, 0.6],
+    [/^IndicatorLens$/, 1.0],
+    [/^ShellTop$/, 0.78],
+    [/^Equator_Seam$/, 0.5],
     [/^PayloadBox$/, 0],
-    [/^Isolator_\d(_Ring.*)?$/, -0.32],
-    [/^Electronics_[AB]$/, -0.58],
-    [/^ShellBottom$/, -0.84],
-    [/^Leg\d_(Boss|Strut|Foot)$/, -1.24],
+    [/^Isolator_\d(_Ring.*)?$/, -0.27],
+    [/^Electronics_[AB]$/, -0.48],
+    [/^ShellBottom$/, -0.7],
+    [/^Leg\d_(Boss|Strut|Foot)$/, -1.02],
   ],
 };
 
@@ -67,8 +67,8 @@ function nearViewport(el: Element, margin: number): boolean {
 
 interface Part {
   obj: THREE.Object3D;
-  baseY: number;
-  dy: number;
+  baseZ: number;
+  dz: number;
 }
 
 const viewers: { update: () => void }[] = [];
@@ -117,9 +117,11 @@ async function boot(section: HTMLElement) {
   renderer.setClearColor(0x000000, 0);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(38, 4 / 3, 0.1, 100);
-  // Framed for the fully separated stack, so nothing has to scale or dolly
-  // while it comes apart. Motion stays on one axis.
+  const FOV = 38;
+  const camera = new THREE.PerspectiveCamera(FOV, 4 / 3, 0.1, 100);
+  // Direction only. The distance is set below, once the exploded height of this
+  // particular model is known, so nothing has to scale or dolly while it comes
+  // apart and motion stays on one axis.
   camera.position.set(3.1, 1.95, 3.9);
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x9a9384, 2.1));
@@ -146,15 +148,30 @@ async function boot(section: HTMLElement) {
   const radius = box.getSize(new THREE.Vector3()).length() / 2 || 1;
   model.position.sub(centre);
   root.scale.setScalar(1 / radius);
+  // These GLB files are Z-up; three.js is Y-up. Stand the assembly upright.
+  root.rotation.x = -Math.PI / 2;
   root.add(model);
 
   const parts: Part[] = [];
+  let apartLo = Infinity;
+  let apartHi = -Infinity;
   model.traverse((o) => {
-    if (!(o as THREE.Mesh).isMesh) return;
-    const dy = offsetFor(concept, o.name || o.parent?.name || "");
-    if (dy === null || dy === 0) return;
-    parts.push({ obj: o, baseY: o.position.y, dy: dy * radius });
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const dz = (offsetFor(concept, o.name || o.parent?.name || "") ?? 0) * radius;
+    mesh.geometry.computeBoundingBox();
+    const bb = mesh.geometry.boundingBox!;
+    apartLo = Math.min(apartLo, bb.min.z - centre.z + dz);
+    apartHi = Math.max(apartHi, bb.max.z - centre.z + dz);
+    if (dz !== 0) parts.push({ obj: o, baseZ: o.position.z, dz });
   });
+
+  // Frame the camera for the fully separated stack of this model, with a little
+  // headroom, so nothing clips at either end of the scroll.
+  const apartHeight = (apartHi - apartLo) / radius;
+  const needed = (apartHeight / 2 / Math.tan((FOV / 2) * (Math.PI / 180))) * 1.14;
+  camera.position.setLength(needed);
+  controls.maxDistance = Math.max(8, needed * 1.6);
 
   let target = 0;
   let shown = 0;
@@ -171,7 +188,7 @@ async function boot(section: HTMLElement) {
   }
 
   function draw() {
-    for (const p of parts) p.obj.position.y = p.baseY + p.dy * shown;
+    for (const p of parts) p.obj.position.z = p.baseZ + p.dz * shown;
     bar.style.width = `${Math.round(shown * 100)}%`;
     renderer.render(scene, camera);
   }
