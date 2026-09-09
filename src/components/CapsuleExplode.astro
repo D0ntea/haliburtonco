@@ -2,8 +2,8 @@
 // Scroll-driven exploded view of a GLB capsule model.
 // Progressive enhancement: the markup renders a static poster and a caption.
 // Three.js is code-split and only fetched when the section nears the viewport,
-// and only when the browser reports WebGL. Reduced-motion users get a slider
-// instead of scroll scrubbing.
+// and only when the browser reports WebGL. Reduced-motion users still scrub by
+// scroll, they just get no easing between positions.
 interface Props {
   id: string;
   src: string;
@@ -28,10 +28,6 @@ const { id, src, concept, heading, caption, poster, posterAlt } = Astro.props;
             <span class="explode__track"><i data-bar></i></span>
             <span class="explode__meter-b">Apart</span>
           </div>
-          <label class="explode__slider" data-slider-wrap hidden>
-            <span>Separation</span>
-            <input type="range" min="0" max="100" value="0" step="1" data-slider aria-label={`Separation of ${heading}`} />
-          </label>
           <p class="explode__hint" data-hint>Scroll to pull it apart. Drag to turn it.</p>
         </div>
         <div class="explode__stage">
@@ -83,13 +79,6 @@ const { id, src, concept, heading, caption, poster, posterAlt } = Astro.props;
     flex: 1; height: 4px; background: var(--rule); position: relative; overflow: hidden; max-width: 16rem;
   }
   .explode__track i { display: block; height: 100%; width: 0%; background: var(--gold); }
-
-  .explode__slider { margin-top: var(--space-4); display: grid; gap: var(--space-2); max-width: 20rem; }
-  .explode__slider span {
-    font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--accent);
-  }
-  .explode__slider input { width: 100%; accent-color: var(--accent); }
 
   .explode__hint { margin-top: var(--space-3); font-size: var(--text-sm); color: var(--ink-faint); }
 

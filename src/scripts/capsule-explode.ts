@@ -7,7 +7,11 @@
 //    isolators radially outward as well, which read as the whole object
 //    swelling rather than an assembly coming apart in order.
 //
-// 2. Rendering is dirty-flagged and the loop stops once the model settles and
+// 2. Nothing is scaled while separating. Shrinking the assembly to keep a
+//    taller stack in frame moved every part inward on X and Z too, which read
+//    as horizontal drift. The camera is simply framed for the exploded state.
+//
+// 3. Rendering is dirty-flagged and the loop stops once the model settles and
 //    the camera is still. Two continuously rendering WebGL canvases on a page
 //    the user is scrolling was the cause of the jank.
 //
@@ -41,10 +45,6 @@ const RULES: Record<string, [RegExp, number][]> = {
     [/^Leg\d_(Boss|Strut|Foot)$/, -1.24],
   ],
 };
-
-/** How much the assembly shrinks at full separation, so a taller stack stays
- *  inside the frame without fighting the user's orbit or zoom. */
-const SHRINK = 0.3;
 
 function offsetFor(concept: string, name: string): number | null {
   for (const [re, dy] of RULES[concept] ?? []) if (re.test(name)) return dy;
@@ -99,9 +99,6 @@ async function boot(section: HTMLElement) {
   const canvas = section.querySelector<HTMLCanvasElement>("[data-canvas]")!;
   const stage = canvas.parentElement as HTMLElement;
   const bar = section.querySelector<HTMLElement>("[data-bar]")!;
-  const sliderWrap = section.querySelector<HTMLElement>("[data-slider-wrap]")!;
-  const slider = section.querySelector<HTMLInputElement>("[data-slider]")!;
-  const hint = section.querySelector<HTMLElement>("[data-hint]")!;
   const rail = section.querySelector<HTMLElement>(".explode__rail")!;
 
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -121,7 +118,9 @@ async function boot(section: HTMLElement) {
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, 4 / 3, 0.1, 100);
-  camera.position.set(2.7, 1.7, 3.4);
+  // Framed for the fully separated stack, so nothing has to scale or dolly
+  // while it comes apart. Motion stays on one axis.
+  camera.position.set(3.1, 1.95, 3.9);
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x9a9384, 2.1));
   const key = new THREE.DirectionalLight(0xffffff, 2.4);
@@ -146,8 +145,7 @@ async function boot(section: HTMLElement) {
   const centre = box.getCenter(new THREE.Vector3());
   const radius = box.getSize(new THREE.Vector3()).length() / 2 || 1;
   model.position.sub(centre);
-  const baseScale = 1 / radius;
-  root.scale.setScalar(baseScale);
+  root.scale.setScalar(1 / radius);
   root.add(model);
 
   const parts: Part[] = [];
@@ -174,14 +172,13 @@ async function boot(section: HTMLElement) {
 
   function draw() {
     for (const p of parts) p.obj.position.y = p.baseY + p.dy * shown;
-    root.scale.setScalar(baseScale * (1 - SHRINK * shown));
     bar.style.width = `${Math.round(shown * 100)}%`;
     renderer.render(scene, camera);
   }
 
   function frame() {
     const delta = target - shown;
-    const settling = Math.abs(delta) > 0.0006;
+    const settling = !reduced && Math.abs(delta) > 0.0006;
     shown += settling ? delta * 0.16 : delta;
 
     // OrbitControls returns true while damping is still easing the camera.
@@ -217,21 +214,6 @@ async function boot(section: HTMLElement) {
     dirty = true;
     start();
   });
-
-  if (reduced) {
-    sliderWrap.hidden = false;
-    hint.textContent = "Use the slider to pull it apart. Drag to turn it.";
-    rail.style.height = "auto";
-    const sticky = rail.firstElementChild as HTMLElement;
-    sticky.style.position = "static";
-    sticky.style.height = "auto";
-    slider.addEventListener("input", () => {
-      target = Number(slider.value) / 100;
-      start();
-    });
-    viewers.push({ update() {} });
-    return;
-  }
 
   viewers.push({
     update() {
