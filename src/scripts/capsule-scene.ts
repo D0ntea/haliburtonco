@@ -172,12 +172,15 @@ function layout() {
     const r = s.rail.getBoundingClientRect();
     const span = r.height - window.innerHeight;
     if (span <= 0) continue;
-    const next = Math.min(1, Math.max(0, -r.top / span));
-    if (Math.abs(next - s.target) > 0.0004) {
-      s.target = next;
-      if (s === active) start();
-    }
+    s.target = Math.min(1, Math.max(0, -r.top / span));
   }
+
+  // Resume whenever the active scene is not where it should be, rather than
+  // only when its target happens to change on this pass. Gating on a change
+  // could strand a scene mid-separation: if the pass that moved it back toward
+  // assembled arrived while it was not the active scene, nothing ever restarted
+  // the loop and it stayed stuck open.
+  if (active && Math.abs(active.target - active.shown) > 0.0006) start();
 }
 
 function resize() {
