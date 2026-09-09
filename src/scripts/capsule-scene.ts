@@ -14,10 +14,15 @@
 //    the scroll. That is what makes it read as an explanation rather than an
 //    object inflating.
 //
-// 4. Rendering is dirty-flagged and stops when nothing is moving.
+// 4. No OrbitControls. It swallows the mouse wheel over the canvas, which on a
+//    pinned full-viewport stage means the page stops scrolling and the camera
+//    zooms instead. A second instance bound to the same shared canvas also
+//    fought the first. This is scroll only, and the canvas takes no pointer
+//    events at all.
+//
+// 5. Rendering is dirty-flagged and stops when nothing is moving.
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 /** [pattern, offset in model radii along local Z, scroll window start, end] */
 type Rule = [RegExp, number, number, number];
@@ -50,7 +55,7 @@ const STEP_AT: Record<string, number[]> = {
   concept2: [0, 0.14, 0.36, 0.56, 0.78],
 };
 
-const SPIN = 0.62; // radians of turn across the whole scroll
+const SPIN = 0.8; // radians of turn across the whole scroll
 
 function ruleFor(concept: string, name: string): Rule | null {
   for (const r of RULES[concept] ?? []) if (r[0].test(name)) return r;
@@ -75,6 +80,9 @@ let shared: { canvas: HTMLCanvasElement; renderer: THREE.WebGLRenderer } | null 
 function sharedRenderer() {
   if (!shared) {
     const canvas = document.createElement("canvas");
+    // The stage is pinned across the whole viewport; the canvas must never
+    // intercept a wheel, drag or tap meant for the page.
+    canvas.style.pointerEvents = "none";
     const renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
@@ -102,7 +110,6 @@ interface Scene3D {
   stage: HTMLElement;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
-  controls: OrbitControls;
   spin: THREE.Group;
   parts: Part[];
   steps: HTMLElement[];
@@ -158,6 +165,7 @@ function layout() {
     active = best;
     resize();
     dirty = true;
+    start();
   }
 
   for (const s of scenes) {
@@ -208,8 +216,7 @@ function frame() {
   const settling = !s.reduced && Math.abs(delta) > 0.0006;
   s.shown += settling ? delta * 0.15 : delta;
 
-  const camMoving = s.controls.update();
-  if (settling || camMoving || dirty) {
+  if (settling || dirty) {
     dirty = false;
     draw(s);
     requestAnimationFrame(frame);
@@ -283,25 +290,12 @@ async function boot(section: HTMLElement) {
   const apart = (hi - lo) / radius;
   camera.position.setLength((apart / 2 / Math.tan((FOV / 2) * (Math.PI / 180))) * 1.1);
 
-  const { canvas } = sharedRenderer();
-  const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.enablePan = false;
-  controls.minDistance = 2.4;
-  controls.maxDistance = camera.position.length() * 1.8;
-  controls.addEventListener("change", () => {
-    dirty = true;
-    start();
-  });
-
   const s: Scene3D = {
     section,
     rail,
     stage,
     scene,
     camera,
-    controls,
     spin,
     parts,
     steps,

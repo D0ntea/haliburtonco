@@ -43,7 +43,7 @@ const { id, src, concept, eyebrow, heading, steps, poster, posterAlt } = Astro.p
             ))}
           </ol>
         </div>
-        <p class="scene__hint" data-hint>Keep scrolling. Drag to turn it.</p>
+        <p class="scene__hint" data-hint>Keep scrolling.</p>
       </div>
 
       <div class="scene__bar" aria-hidden="true"><i data-bar></i></div>
@@ -69,7 +69,10 @@ const { id, src, concept, eyebrow, heading, steps, poster, posterAlt } = Astro.p
 
   /* The stage is the full pinned area, not a boxed viewer. */
   .scene__stage { position: absolute; inset: 0; display: grid; place-items: center; }
-  .scene__stage :global(canvas) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .scene__stage :global(canvas) {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+    pointer-events: none; /* the page owns every wheel and drag over the stage */
+  }
   .scene__poster { max-width: min(62vw, 42rem); height: auto; object-fit: contain; opacity: 0.9; }
   .scene__stage[data-live] .scene__poster { display: none; }
 
