@@ -111,7 +111,9 @@ interface Part {
 interface Scene3D {
   section: HTMLElement;
   rail: HTMLElement;
+  pin: HTMLElement;
   stage: HTMLElement;
+  lift: number;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   spin: THREE.Group;
@@ -131,6 +133,8 @@ let loop = 0;
 let pass = 0;
 let lastDrawn = -1;
 let lastScene: Scene3D | null = null;
+let lastW = 0;
+let lastH = 0;
 
 // setTimeout, not requestAnimationFrame: a tab that starts hidden never fires
 // rAF, and booting must not wait on paint.
@@ -149,9 +153,13 @@ function schedulePass() {
   });
 }
 
+// Progress is measured against the PIN's own height, not window.innerHeight.
+// On a phone the URL bar hides as you scroll, innerHeight changes mid-gesture,
+// and a span computed from it makes the animation jump. The pin and the rail
+// come from the same layout pass, so their heights stay consistent.
 function railProgress(s: Scene3D): number {
   const r = s.rail.getBoundingClientRect();
-  const span = r.height - window.innerHeight;
+  const span = r.height - s.pin.offsetHeight;
   if (span <= 0) return s.target;
   return Math.min(1, Math.max(0, -r.top / span));
 }
@@ -178,6 +186,8 @@ function pickActive(): Scene3D | null {
     best.stage.appendChild(canvas);
     best.stage.setAttribute("data-live", "");
     active = best;
+    lastW = 0; // the new scene needs its own resize regardless of dimensions
+    lastH = 0;
     resize();
   }
   return best;
@@ -188,9 +198,22 @@ function resize() {
   const { renderer } = sharedRenderer();
   const w = Math.max(1, active.stage.clientWidth);
   const h = Math.max(1, active.stage.clientHeight);
+  // Hiding the URL bar on a phone fires resize repeatedly. Reallocating the
+  // drawing buffer on every twitch is expensive, so only touch it on a real
+  // change of size.
+  if (w === lastW && h === lastH) return;
+  lastW = w;
+  lastH = h;
+
+  const narrow = w < 900;
+  // A phone is typically 3x. Rendering line art at 3x costs a lot of fill rate
+  // and shows almost nothing, so cap harder on small screens.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, narrow ? 1.25 : 1.5));
   renderer.setSize(w, h, false);
   active.camera.aspect = w / h;
   active.camera.updateProjectionMatrix();
+  // On mobile the copy sits across the bottom, so raise the model clear of it.
+  active.spin.position.y = narrow ? active.lift : 0;
   lastDrawn = -1; // force a redraw at the new size
 }
 
@@ -242,6 +265,7 @@ async function boot(section: HTMLElement) {
 
   const stage = section.querySelector<HTMLElement>("[data-stage]")!;
   const rail = section.querySelector<HTMLElement>(".scene__rail")!;
+  const pin = section.querySelector<HTMLElement>(".scene__pin")!;
   const bar = section.querySelector<HTMLElement>("[data-bar]")!;
   const steps = Array.from(section.querySelectorAll<HTMLElement>(".step"));
 
@@ -305,7 +329,9 @@ async function boot(section: HTMLElement) {
   const s: Scene3D = {
     section,
     rail,
+    pin,
     stage,
+    lift: apart * 0.17,
     scene,
     camera,
     spin,

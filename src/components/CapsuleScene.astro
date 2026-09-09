@@ -61,9 +61,13 @@ const { id, src, concept, eyebrow, heading, steps, poster, posterAlt } = Astro.p
   .scene[data-fallback] .scene__hint { display: none; }
   .scene[data-fallback] .step { opacity: 1; }
 
-  .scene__rail { position: relative; height: 460vh; }
+  /* svh, not vh. On phones vh is the LARGE viewport height, so a 100vh pin is
+     taller than what you can actually see while the URL bar is showing, and the
+     whole thing lurches when the bar hides. svh is the stable small height. */
+  .scene__rail { position: relative; height: 460vh; height: 460svh; }
   .scene__pin {
-    position: sticky; top: 0; height: 100vh;
+    position: sticky; top: 0;
+    height: 100vh; height: 100svh;
     display: grid; place-items: center; overflow: hidden;
   }
 
@@ -119,7 +123,8 @@ const { id, src, concept, eyebrow, heading, steps, poster, posterAlt } = Astro.p
 
   /* Text sits over the model on narrow screens, so give it a scrim. */
   @media (max-width: 900px) {
-    .scene__rail { height: 400vh; }
+    /* Four screens of scrolling per scene is too much thumb work on a phone. */
+    .scene__rail { height: 260vh; height: 260svh; }
     .scene__ui { align-content: end; padding-bottom: var(--space-6); }
     .scene__text {
       background: color-mix(in srgb, var(--bg) 86%, transparent);
