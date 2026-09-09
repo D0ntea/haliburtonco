@@ -1,0 +1,104 @@
+---
+// Scroll-driven exploded view of a GLB capsule model.
+// Progressive enhancement: the markup renders a static poster and a caption.
+// Three.js is code-split and only fetched when the section nears the viewport,
+// and only when the browser reports WebGL. Reduced-motion users get a slider
+// instead of scroll scrubbing.
+interface Props {
+  id: string;
+  src: string;
+  concept: "concept1" | "concept2";
+  heading: string;
+  caption: string;
+  poster: string;
+  posterAlt: string;
+}
+const { id, src, concept, heading, caption, poster, posterAlt } = Astro.props;
+---
+<section class="explode" id={id} data-explode={concept} data-src={src} aria-labelledby={`${id}-h`}>
+  <div class="explode__rail">
+    <div class="explode__sticky">
+      <div class="shell explode__inner">
+        <div class="explode__head">
+          <p class="explode__eyebrow">Exploded view</p>
+          <h3 class="explode__h" id={`${id}-h`}>{heading}</h3>
+          <p class="explode__cap">{caption}</p>
+          <div class="explode__meter" aria-hidden="true">
+            <span class="explode__meter-a">Assembled</span>
+            <span class="explode__track"><i data-bar></i></span>
+            <span class="explode__meter-b">Apart</span>
+          </div>
+          <label class="explode__slider" data-slider-wrap hidden>
+            <span>Separation</span>
+            <input type="range" min="0" max="100" value="0" step="1" data-slider aria-label={`Separation of ${heading}`} />
+          </label>
+          <p class="explode__hint" data-hint>Scroll to pull it apart. Drag to turn it.</p>
+        </div>
+        <div class="explode__stage">
+          <img class="explode__poster" src={poster} alt={posterAlt} width="1400" height="1050" loading="lazy" data-poster />
+          <canvas data-canvas hidden aria-hidden="true"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .explode { margin-top: var(--space-7); }
+
+  /* If the 3D viewer never boots (no WebGL, blocked module, slow device) the
+     tall scroll rail would strand a static poster in a 260vh section. Collapse
+     it back to an ordinary figure so the page still reads correctly. */
+  .explode[data-fallback] .explode__rail { height: auto; }
+  .explode[data-fallback] .explode__sticky { position: static; height: auto; }
+  .explode[data-fallback] .explode__meter,
+  .explode[data-fallback] .explode__hint { display: none; }
+  .explode__rail { position: relative; height: 260vh; }
+  .explode__sticky { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; }
+  .explode__inner {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--space-6);
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .explode__rail { height: 200vh; }
+    .explode__inner { grid-template-columns: 1fr; gap: var(--space-4); align-content: center; }
+  }
+
+  .explode__eyebrow {
+    font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .explode__h { margin-top: var(--space-2); font-size: var(--text-h3, 1.5rem); line-height: 1.2; }
+  .explode__cap { margin-top: var(--space-3); color: var(--ink-muted); max-width: 40ch; }
+
+  .explode__meter {
+    margin-top: var(--space-4);
+    display: flex; align-items: center; gap: var(--space-2);
+    font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint);
+  }
+  .explode__track {
+    flex: 1; height: 4px; background: var(--rule); position: relative; overflow: hidden; max-width: 16rem;
+  }
+  .explode__track i { display: block; height: 100%; width: 0%; background: var(--gold); }
+
+  .explode__slider { margin-top: var(--space-4); display: grid; gap: var(--space-2); max-width: 20rem; }
+  .explode__slider span {
+    font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .explode__slider input { width: 100%; accent-color: var(--accent); }
+
+  .explode__hint { margin-top: var(--space-3); font-size: var(--text-sm); color: var(--ink-faint); }
+
+  .explode__stage {
+    position: relative; aspect-ratio: 4 / 3; width: 100%;
+    border: 1px solid var(--rule); background: var(--bg-elev);
+  }
+  .explode__stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .explode__poster { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .explode__stage[data-live] .explode__poster { visibility: hidden; }
+  @media (max-width: 900px) { .explode__stage { aspect-ratio: 1 / 1; } }
+</style>

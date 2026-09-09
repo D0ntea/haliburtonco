@@ -4,8 +4,10 @@
 // sitemap, robots noindex. Employer stays off this page, same rule as the brief.
 import Layout from "../../layouts/BareLayout.astro";
 import Eyebrow from "../../components/Eyebrow.astro";
+import CapsuleExplode from "../../components/CapsuleExplode.astro";
 
 const IMG = "/ideation/img-r7v2";
+const MODEL = "/ideation/models-r7v2";
 
 const rubric = [
   ["Heading", "A short descriptive heading for the idea, with the member name."],
@@ -92,7 +94,19 @@ const names = [
       </picture>
       <figcaption>The deployed capsule. Four sprung legs, spring loaded pivots, a conforming pad at each tip.</figcaption>
     </figure>
+  </section>
 
+  <CapsuleExplode
+    id="explode-1"
+    concept="concept1"
+    src={`${MODEL}/concept1_terrain_touchdown.glb`}
+    heading="Four layers between the ground and the payload."
+    caption="The shell splits, the crushable core lifts clear, and the legs step outward. What is left in the middle is the payload pod sitting on its ballast, which is the only part that must survive intact."
+    poster={`${IMG}/idea1-section.jpg`}
+    posterAlt="Cross section of the capsule showing the outer shell, the crushable core, the payload pod and the ballast."
+  />
+
+  <section class="section shell">
     <figure class="fig">
       <picture>
         <source srcset={`${IMG}/idea1-sequence.webp`} type="image/webp" />
@@ -166,7 +180,19 @@ const names = [
       </picture>
       <figcaption>The payload box is suspended on shock isolators. The two flat modules beneath it are the impact and temperature loggers, riding with the contents rather than bolted to the shell.</figcaption>
     </figure>
+  </section>
 
+  <CapsuleExplode
+    id="explode-2"
+    concept="concept2"
+    src={`${MODEL}/concept2_self_verifying.glb`}
+    heading="The verification hardware rides with the contents."
+    caption="Pull the shell away and the indicator lens goes with it, because it reports rather than senses. The loggers stay down on the floor with the payload box, which is the point. They record what the contents felt, not what the shell felt."
+    poster={`${IMG}/idea2-exploded.jpg`}
+    posterAlt="Exploded assembly sketch of the self verifying capsule, showing the shell hemispheres, the payload box on isolators and the electronics modules."
+  />
+
+  <section class="section shell">
     <figure class="fig">
       <picture>
         <source srcset={`${IMG}/idea2-indicator.webp`} type="image/webp" />
@@ -251,8 +277,50 @@ const names = [
     <p class="contact">
       Questions on either concept: <a href="mailto:dhalibur@asu.edu">dhalibur@asu.edu</a>
     </p>
+    <p class="fine">
+      The 3D models are conceptual interpretations of the sketches, not dimension controlled CAD.
+    </p>
   </section>
 </Layout>
+
+<script>
+  // Three.js is heavy, so it is code split and only fetched once a viewer is
+  // near the viewport. Rect checks rather than IntersectionObserver, because
+  // some embedded browser contexts never fire IO and the viewer would then
+  // never boot. Without the module the posters and captions stand alone.
+  const viewers = document.querySelectorAll("[data-explode]");
+  if (viewers.length > 0) {
+    let loaded = false;
+    const near = () =>
+      Array.from(viewers).some((v) => {
+        const r = v.getBoundingClientRect();
+        return r.bottom > -900 && r.top < window.innerHeight + 900;
+      });
+    const maybeLoad = () => {
+      if (loaded || !near()) return;
+      loaded = true;
+      window.removeEventListener("scroll", maybeLoad);
+      window.removeEventListener("resize", maybeLoad);
+      import("../../scripts/capsule-explode")
+        .then((m) => m.initCapsuleExplode())
+        .catch((err) => console.error("[capsule-explode] import failed", err));
+    };
+    window.addEventListener("scroll", maybeLoad, { passive: true });
+    window.addEventListener("resize", maybeLoad, { passive: true });
+    document.addEventListener("visibilitychange", maybeLoad);
+    maybeLoad();
+    setTimeout(maybeLoad, 500);
+    // Watchdog: if a viewer has not gone live, collapse its scroll rail so the
+    // poster reads as an ordinary figure instead of sitting in dead space.
+    setTimeout(() => {
+      viewers.forEach((v) => {
+        if (!v.querySelector(".explode__stage")?.hasAttribute("data-live")) {
+          v.setAttribute("data-fallback", "");
+        }
+      });
+    }, 6000);
+  }
+</script>
 
 <style is:global>
   /* ASU theme: maroon + gold on white, Arial/Helvetica per ASU brand. No logos. */
@@ -368,4 +436,8 @@ const names = [
 
   .contact { margin-top: var(--space-6); }
   .contact a { color: var(--accent); font-weight: 700; }
+</style>
+
+<style>
+  .fine { margin-top: var(--space-3); font-size: var(--text-sm); color: var(--ink-faint); }
 </style>
