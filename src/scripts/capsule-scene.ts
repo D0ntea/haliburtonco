@@ -286,9 +286,16 @@ async function boot(section: HTMLElement) {
     }
   });
 
-  // Frame for this model's own fully separated height so nothing clips.
+  // Frame for this model's own fully separated height so nothing clips, and
+  // aim at the middle of that separated stack rather than the world origin.
+  // OrbitControls used to point the camera every frame; without it the camera
+  // keeps its default heading and the model sits off screen entirely.
   const apart = (hi - lo) / radius;
-  camera.position.setLength((apart / 2 / Math.tan((FOV / 2) * (Math.PI / 180))) * 1.1);
+  const midY = (hi + lo) / 2 / radius;
+  camera.position.setLength((apart / 2 / Math.tan((FOV / 2) * (Math.PI / 180))) * 1.2);
+  camera.position.y += midY;
+  camera.lookAt(0, midY, 0);
+  camera.updateProjectionMatrix();
 
   const s: Scene3D = {
     section,
