@@ -1,0 +1,127 @@
+---
+// A scroll-driven 3D scene. The model is the stage: it pins full width while
+// the page scrolls through it, and the assembly comes apart one group at a
+// time with the narrative stepping alongside it.
+//
+// Progressive enhancement: without the module this renders a poster, a heading
+// and the same numbered steps as plain text, and a watchdog collapses the tall
+// rail so nothing is stranded in dead space.
+interface Step {
+  label: string;
+  body: string;
+}
+interface Props {
+  id: string;
+  src: string;
+  concept: "concept1" | "concept2";
+  eyebrow: string;
+  heading: string;
+  steps: Step[];
+  poster: string;
+  posterAlt: string;
+}
+const { id, src, concept, eyebrow, heading, steps, poster, posterAlt } = Astro.props;
+---
+<section class="scene" id={id} data-scene={concept} data-src={src} aria-labelledby={`${id}-h`}>
+  <div class="scene__rail">
+    <div class="scene__pin">
+      <div class="scene__stage" data-stage>
+        <img class="scene__poster" src={poster} alt={posterAlt} width="1400" height="1050" loading="lazy" />
+      </div>
+
+      <div class="scene__ui shell">
+        <div class="scene__text">
+          <p class="scene__eyebrow">{eyebrow}</p>
+          <h3 class="scene__h" id={`${id}-h`}>{heading}</h3>
+          <ol class="scene__steps">
+            {steps.map((s, i) => (
+              <li class="step" data-step={i} data-on={i === 0 ? "" : null}>
+                <span class="step__n">{String(i + 1).padStart(2, "0")}</span>
+                <span class="step__label">{s.label}</span>
+                <span class="step__body">{s.body}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <p class="scene__hint" data-hint>Keep scrolling. Drag to turn it.</p>
+      </div>
+
+      <div class="scene__bar" aria-hidden="true"><i data-bar></i></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .scene { margin-top: var(--space-7); }
+
+  /* Without the 3D module the rail collapses to an ordinary figure. */
+  .scene[data-fallback] .scene__rail { height: auto; }
+  .scene[data-fallback] .scene__pin { position: static; height: auto; padding-block: var(--space-6); }
+  .scene[data-fallback] .scene__bar,
+  .scene[data-fallback] .scene__hint { display: none; }
+  .scene[data-fallback] .step { opacity: 1; }
+
+  .scene__rail { position: relative; height: 460vh; }
+  .scene__pin {
+    position: sticky; top: 0; height: 100vh;
+    display: grid; place-items: center; overflow: hidden;
+  }
+
+  /* The stage is the full pinned area, not a boxed viewer. */
+  .scene__stage { position: absolute; inset: 0; display: grid; place-items: center; }
+  .scene__stage :global(canvas) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .scene__poster { max-width: min(62vw, 42rem); height: auto; object-fit: contain; opacity: 0.9; }
+  .scene__stage[data-live] .scene__poster { display: none; }
+
+  .scene__ui {
+    position: relative; z-index: 2; width: 100%;
+    height: 100%; display: grid; align-content: center;
+    pointer-events: none;
+  }
+  .scene__text { max-width: 30rem; }
+  .scene__eyebrow {
+    font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .scene__h {
+    margin-top: var(--space-2); font-size: var(--text-h3, 1.6rem); line-height: 1.15;
+    max-width: 18ch;
+  }
+
+  .scene__steps { list-style: none; margin: var(--space-5) 0 0; padding: 0; display: grid; gap: var(--space-3); }
+  .step {
+    display: grid; grid-template-columns: 2.2rem 1fr; column-gap: var(--space-3);
+    opacity: 0.28; transition: opacity 240ms ease;
+  }
+  .step[data-on] { opacity: 1; }
+  .step__n {
+    grid-row: 1 / span 2;
+    font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em;
+    color: var(--accent); padding-top: 0.25em;
+  }
+  .step__label { font-weight: 700; font-size: var(--text-lg); line-height: 1.2; }
+  .step__body { font-size: var(--text-sm); color: var(--ink-muted); max-width: 34ch; }
+  .step[data-on] .step__label { color: var(--ink); }
+
+  .scene__hint {
+    position: absolute; left: 0; bottom: var(--space-5);
+    font-size: var(--text-sm); color: var(--ink-faint);
+  }
+
+  .scene__bar {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+    background: var(--rule); z-index: 3;
+  }
+  .scene__bar i { display: block; height: 100%; width: 0%; background: var(--gold); }
+
+  /* Text sits over the model on narrow screens, so give it a scrim. */
+  @media (max-width: 900px) {
+    .scene__rail { height: 400vh; }
+    .scene__ui { align-content: end; padding-bottom: var(--space-6); }
+    .scene__text {
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
+      padding: var(--space-4); max-width: none;
+    }
+    .scene__hint { display: none; }
+  }
+</style>

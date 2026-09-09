@@ -4,7 +4,7 @@
 // sitemap, robots noindex. Employer stays off this page, same rule as the brief.
 import Layout from "../../layouts/BareLayout.astro";
 import Eyebrow from "../../components/Eyebrow.astro";
-import CapsuleExplode from "../../components/CapsuleExplode.astro";
+import CapsuleScene from "../../components/CapsuleScene.astro";
 
 const IMG = "/ideation/img-r7v2";
 const MODEL = "/ideation/models-r7v2";
@@ -14,6 +14,22 @@ const rubric = [
   ["Description", "A brief description of the idea. 10 points."],
   ["Sketch", "A very simple sketch or diagram. Hand drawn is acceptable. 10 points."],
   ["Rationale", "A short reason why the idea is a reasonable approach. 10 points."],
+];
+
+const steps1 = [
+  { label: "Assembled", body: "A sphere on four legs. Nothing on the outside tells you what is inside." },
+  { label: "The legs let go", body: "First contact is the four sprung legs, so they are the first thing to come away." },
+  { label: "The shell opens", body: "Top and bottom separate at the seam. The shell is packaging, not structure." },
+  { label: "The core lifts clear", body: "The crushable layer is the part that spends the landing energy." },
+  { label: "What has to survive", body: "The payload pod, and the ballast that rights it. Everything else is expendable." },
+];
+
+const steps2 = [
+  { label: "Assembled", body: "One lens on the outside is the only thing a crew has to read." },
+  { label: "The lens comes away", body: "It reports rather than senses, so it lives on the shell." },
+  { label: "The shell opens", body: "Nothing about the shell has to change for verification to work." },
+  { label: "The legs step out", body: "Same landing hardware as the first concept. This is not a new airframe." },
+  { label: "The loggers stay put", body: "Impact and temperature ride with the contents, on the floor beside the payload." },
 ];
 
 const names = [
@@ -96,15 +112,17 @@ const names = [
     </figure>
   </section>
 
-  <CapsuleExplode
-    id="explode-1"
+  <CapsuleScene
+    id="scene-1"
     concept="concept1"
     src={`${MODEL}/concept1_terrain_touchdown.glb`}
+    eyebrow="Take it apart"
     heading="Four layers between the ground and the payload."
-    caption="The shell splits, the crushable core lifts clear, and the legs step outward. What is left in the middle is the payload pod sitting on its ballast, which is the only part that must survive intact."
+    steps={steps1}
     poster={`${IMG}/idea1-section.jpg`}
     posterAlt="Cross section of the capsule showing the outer shell, the crushable core, the payload pod and the ballast."
   />
+
 
   <section class="section shell">
     <figure class="fig">
@@ -182,15 +200,17 @@ const names = [
     </figure>
   </section>
 
-  <CapsuleExplode
-    id="explode-2"
+  <CapsuleScene
+    id="scene-2"
     concept="concept2"
     src={`${MODEL}/concept2_self_verifying.glb`}
+    eyebrow="Take it apart"
     heading="The verification hardware rides with the contents."
-    caption="Pull the shell away and the indicator lens goes with it, because it reports rather than senses. The loggers stay down on the floor with the payload box, which is the point. They record what the contents felt, not what the shell felt."
+    steps={steps2}
     poster={`${IMG}/idea2-exploded.jpg`}
     posterAlt="Exploded assembly sketch of the self verifying capsule, showing the shell hemispheres, the payload box on isolators and the electronics modules."
   />
+
 
   <section class="section shell">
     <figure class="fig">
@@ -288,7 +308,7 @@ const names = [
   // near the viewport. Rect checks rather than IntersectionObserver, because
   // some embedded browser contexts never fire IO and the viewer would then
   // never boot. Without the module the posters and captions stand alone.
-  const viewers = document.querySelectorAll("[data-explode]");
+  const viewers = document.querySelectorAll("[data-scene]");
   if (viewers.length > 0) {
     let loaded = false;
     const near = () =>
@@ -301,9 +321,9 @@ const names = [
       loaded = true;
       window.removeEventListener("scroll", maybeLoad);
       window.removeEventListener("resize", maybeLoad);
-      import("../../scripts/capsule-explode")
-        .then((m) => m.initCapsuleExplode())
-        .catch((err) => console.error("[capsule-explode] import failed", err));
+      import("../../scripts/capsule-scene")
+        .then((m) => m.initCapsuleScenes())
+        .catch((err) => console.error("[capsule-scene] import failed", err));
     };
     window.addEventListener("scroll", maybeLoad, { passive: true });
     window.addEventListener("resize", maybeLoad, { passive: true });
@@ -314,7 +334,7 @@ const names = [
     // poster reads as an ordinary figure instead of sitting in dead space.
     setTimeout(() => {
       viewers.forEach((v) => {
-        if (!v.querySelector(".explode__stage")?.hasAttribute("data-live")) {
+        if (!v.querySelector(".scene__stage")?.hasAttribute("data-live")) {
           v.setAttribute("data-fallback", "");
         }
       });
