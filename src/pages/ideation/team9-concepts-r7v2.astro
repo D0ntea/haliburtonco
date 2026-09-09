@@ -330,15 +330,17 @@ const names = [
     document.addEventListener("visibilitychange", maybeLoad);
     maybeLoad();
     setTimeout(maybeLoad, 500);
-    // Watchdog: if a viewer has not gone live, collapse its scroll rail so the
-    // poster reads as an ordinary figure instead of sitting in dead space.
+    // Watchdog: if a scene never booted, collapse its scroll rail so the poster
+    // reads as an ordinary figure instead of sitting in dead space.
+    //
+    // This checks data-ready, set once per scene when it boots, NOT data-live.
+    // The scenes share one canvas, so only the active one is ever "live", and
+    // checking that would collapse the other one's rail and freeze it.
     setTimeout(() => {
       viewers.forEach((v) => {
-        if (!v.querySelector(".scene__stage")?.hasAttribute("data-live")) {
-          v.setAttribute("data-fallback", "");
-        }
+        if (!v.hasAttribute("data-ready")) v.setAttribute("data-fallback", "");
       });
-    }, 6000);
+    }, 12000);
   }
 </script>
 

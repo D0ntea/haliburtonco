@@ -344,6 +344,10 @@ async function boot(section: HTMLElement) {
     reduced: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   };
   scenes.push(s);
+  // Mark the section itself as booted. The watchdog must not use data-live for
+  // this: only the scene currently holding the shared canvas carries that, so
+  // the other one would be declared failed and have its scroll rail collapsed.
+  section.setAttribute("data-ready", "");
 
   new ResizeObserver(() => {
     if (active === s) resize();
