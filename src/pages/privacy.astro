@@ -54,9 +54,9 @@ const sections = [
   {
     label: "Retention and deletion",
     body: [
-      "We keep financial data only as long as it is needed for bookkeeping and tax records, and never longer than seven years. An automated job deletes anything older twice a day.",
+      "We keep financial data only as long as it is needed for bookkeeping and tax records, and never longer than seven years. An automated job deletes anything older twice a day. There are no backup copies of this data.",
       "When an account is disconnected, access is revoked through Plaid and that account's stored access token, account details, and transactions are deleted right away. Deduction records the owner has already confirmed are kept as tax records under the same seven-year limit.",
-      "If we stop using Plaid, all data received through Plaid is deleted within 30 days.",
+      "If we stop using Plaid, access is revoked at Plaid and every stored access token is deleted right away. Nothing more is collected. Records already received stay part of the owner's own financial records and follow the same seven-year limit.",
     ],
   },
   {
