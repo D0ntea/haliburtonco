@@ -44,7 +44,7 @@ Changes go live about a minute after push. Before pushing, `git fetch` and make 
 
 ## Unlisted pages
 
-Pages that must not be discoverable (student/capstone briefs, homework pages) pass `noindex` to `Layout` (emits robots noindex/nofollow), get a non-guessable slug under `src/pages/brief/` or similar, and are never linked from the nav. There is no sitemap integration. Current: `/brief/aerial-delivery-x7q4` (ASU MEE 488 capstone interview brief, 2026-09).
+Pages that must not be discoverable (student/capstone briefs, homework pages) pass `noindex` to `Layout` (emits robots noindex/nofollow), get a non-guessable slug under `src/pages/brief/` or similar, and are never linked from the nav. There is no sitemap integration. Current: `/brief/aerial-delivery-x7q4` (ASU MEE 488 capstone interview brief, 2026-09); `/privacy` (Jarvis privacy policy for the Plaid application, 2026-09-25). **Never link to `/privacy` from any page, nav or footer** (Dontea's rule).
 
 ## Source-of-truth content
 
