@@ -2,7 +2,7 @@
 
 ## What this project is
 
-Marketing site for **Haliburton NDT Engineering Consultants, LLC** — a veteran-owned, aerospace-focused NDT consultancy. Built with Astro, deployed on **GitHub Pages** via `.github/workflows/deploy.yml` (push to `main` builds and publishes; migrated off Vercel 2026-06-16), source at `D0ntea/haliburtonco` (private).
+Marketing site for **Haliburton NDT Engineering Consultants, LLC** — a veteran-owned, aerospace-focused NDT consultancy. Built with Astro, deployed on **GitHub Pages** via `.github/workflows/deploy.yml` (push to `main` builds and publishes; migrated off Vercel 2026-06-16), source at `D0ntea/haliburtonco`, which is a PUBLIC repo (checked 2026-10-07): anything committed here, including unlisted pages and their files, is visible on GitHub, so never commit private work or files here.
 
 ## Voice and positioning
 
