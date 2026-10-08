@@ -3,7 +3,7 @@
 <head>
   <meta name="robots" content="noindex, nofollow">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>STEP / STL CAD Viewer</title>
   <style>
     :root {
@@ -29,6 +29,7 @@
       height: 100%;
       margin: 0;
       overflow: hidden;
+      overscroll-behavior: none;
       background: var(--bg);
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -87,6 +88,10 @@
       flex: 1;
     }
 
+    .tool-strip {
+      display: contents;
+    }
+
     .toolbar button,
     .file-label,
     .toolbar-check {
@@ -127,6 +132,10 @@
       border-color: #93b4f8;
       background: var(--accent-soft);
       color: #174ea6;
+    }
+
+    .parts-toggle {
+      display: none;
     }
 
     #fileInput {
@@ -283,6 +292,7 @@
       width: 100%;
       height: 100%;
       outline: none;
+      touch-action: none;
     }
 
     #message {
@@ -332,17 +342,141 @@
     }
 
     @media (max-width: 760px) {
+      html,
+      body {
+        height: 100dvh;
+        inset: 0;
+        position: fixed;
+        width: 100%;
+      }
+
       #app {
-        grid-template-columns: 220px minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+        height: 100dvh;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+        gap: 6px;
+        min-height: 0;
+        padding: max(8px, env(safe-area-inset-top)) 10px 8px;
       }
 
       .brand {
-        min-width: 120px;
+        min-width: 0;
+        margin-right: 0;
+      }
+
+      .brand strong {
+        font-size: 14px;
+      }
+
+      .brand span {
+        display: none;
+      }
+
+      .toolbar {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .tool-strip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .tool-strip::-webkit-scrollbar {
+        display: none;
+      }
+
+      .toolbar button,
+      .file-label,
+      .toolbar-check {
+        flex: 0 0 auto;
+        min-height: 32px;
+        padding: 6px 9px;
+      }
+
+      .file-label {
+        border-color: #93b4f8;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 720;
+      }
+
+      .parts-toggle {
+        display: inline-flex;
       }
 
       .status-chip {
+        display: block;
         width: 100%;
+        min-height: 0;
+        margin-top: 4px;
         margin-left: 0;
+        padding: 4px 8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 12px;
+      }
+
+      aside {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 5;
+        max-height: min(45dvh, 360px);
+        border-top: 1px solid var(--line);
+        border-right: 0;
+        border-radius: 12px 12px 0 0;
+        box-shadow: 0 -16px 34px rgba(15, 23, 42, 0.18);
+        transform: translateY(100%);
+        transition: transform 180ms ease;
+      }
+
+      body.parts-open aside {
+        transform: translateY(0);
+      }
+
+      .sidebar-head {
+        padding: 12px 14px 10px;
+      }
+
+      .sidebar-head h1 {
+        font-size: 15px;
+      }
+
+      #partsList {
+        flex: 1;
+        min-height: 0;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      main {
+        grid-column: 1;
+        grid-row: 2;
+        width: 100vw;
+        min-height: 0;
+        touch-action: none;
+        overscroll-behavior: none;
+      }
+
+      #message {
+        top: 10px;
+        max-width: calc(100% - 20px);
+        padding: 8px 10px;
       }
     }
   </style>
@@ -355,23 +489,26 @@
         <span>STEP and STL, units: mm</span>
       </div>
       <div class="toolbar" aria-label="Viewer toolbar">
-        <label class="file-label" for="fileInput">Open Files</label>
-        <input id="fileInput" type="file" accept=".step,.stp,.stl" multiple>
-        <label class="toolbar-check">
-          <input id="replaceOnOpen" type="checkbox" checked>
-          Replace on open
-        </label>
-        <button id="fitBtn" type="button">Fit View</button>
-        <button id="resetBtn" type="button">Reset</button>
-        <button id="clearBtn" type="button">Clear</button>
-        <button id="wireBtn" type="button" aria-pressed="false">Wireframe</button>
-        <button id="edgesBtn" type="button" aria-pressed="true" class="active">Edges</button>
-        <button id="gridBtn" type="button" aria-pressed="true" class="active">Grid/Axes</button>
+        <div class="tool-strip">
+          <label class="file-label" for="fileInput">Open Files</label>
+          <input id="fileInput" type="file" accept=".step,.stp,.stl" multiple>
+          <button id="partsToggle" class="parts-toggle" type="button" aria-controls="partsPanel" aria-expanded="false">Parts</button>
+          <label class="toolbar-check">
+            <input id="replaceOnOpen" type="checkbox" checked>
+            Replace on open
+          </label>
+          <button id="fitBtn" type="button">Fit View</button>
+          <button id="resetBtn" type="button">Reset</button>
+          <button id="clearBtn" type="button">Clear</button>
+          <button id="wireBtn" type="button" aria-pressed="false">Wireframe</button>
+          <button id="edgesBtn" type="button" aria-pressed="true" class="active">Edges</button>
+          <button id="gridBtn" type="button" aria-pressed="true" class="active">Grid/Axes</button>
+        </div>
         <span id="boundsNote" class="status-chip">Size: no model loaded</span>
       </div>
     </header>
 
-    <aside>
+    <aside id="partsPanel">
       <div class="sidebar-head">
         <h1>Parts</h1>
         <p>Toggle bodies, adjust colors, or select a name to highlight it.</p>
@@ -407,6 +544,7 @@
     const message = document.querySelector('#message');
     const boundsNote = document.querySelector('#boundsNote');
     const replaceOnOpen = document.querySelector('#replaceOnOpen');
+    const partsToggle = document.querySelector('#partsToggle');
     const fitBtn = document.querySelector('#fitBtn');
     const resetBtn = document.querySelector('#resetBtn');
     const clearBtn = document.querySelector('#clearBtn');
@@ -431,6 +569,15 @@
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.screenSpacePanning = true;
+    controls.touches.ONE = THREE.TOUCH.ROTATE;
+    controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+
+    function preventCanvasScroll(event) {
+      event.preventDefault();
+    }
+
+    renderer.domElement.addEventListener('touchstart', preventCanvasScroll, { passive: false });
+    renderer.domElement.addEventListener('touchmove', preventCanvasScroll, { passive: false });
 
     const root = new THREE.Group();
     root.rotation.x = -Math.PI / 2;
@@ -978,6 +1125,11 @@
     fileInput.addEventListener('change', () => {
       loadFiles(fileInput.files);
       fileInput.value = '';
+    });
+
+    partsToggle.addEventListener('click', () => {
+      const isOpen = document.body.classList.toggle('parts-open');
+      partsToggle.setAttribute('aria-expanded', String(isOpen));
     });
 
     fitBtn.addEventListener('click', () => fitView());
