@@ -9,10 +9,16 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "node --test --experimental-test-coverage test/engineering-scan-core.test.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "astro": "^6.1.8",
+    "lucide": "^0.468.0",
     "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0"
   }
 }

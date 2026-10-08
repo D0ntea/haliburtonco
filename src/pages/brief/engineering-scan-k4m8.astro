@@ -1,0 +1,449 @@
+---
+import BareLayout from "../../layouts/BareLayout.astro";
+---
+
+<BareLayout
+  title="EngineeringScan Web Workbench"
+  description="Private browser prototype for engineering mesh inspection, measurement, and datum-relative height mapping."
+>
+  <div class="scan-app" id="scanApp">
+    <header class="app-header">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true">ES</div>
+        <div>
+          <strong>EngineeringScan</strong>
+          <span>Web workbench / prototype 0.2</span>
+        </div>
+      </div>
+      <div class="project-identity">
+        <span class="mono-label">ACTIVE PROJECT</span>
+        <strong id="headerProjectId">BRACKET-001</strong>
+      </div>
+      <div class="header-actions">
+        <span class="local-chip"><i data-lucide="shield-check"></i> Local only</span>
+        <button class="icon-button" id="saveProjectButton" type="button" title="Save project" aria-label="Save project">
+          <i data-lucide="save"></i>
+        </button>
+        <button class="icon-button mobile-nav-button" id="mobileNavButton" type="button" title="Open workflow" aria-label="Open workflow" aria-expanded="false">
+          <i data-lucide="menu"></i>
+        </button>
+      </div>
+    </header>
+
+    <aside class="workflow-nav" id="workflowNav" aria-label="Scan workflow">
+      <div class="workflow-title">
+        <span>WORKFLOW</span>
+        <span id="workflowCount">01 / 08</span>
+      </div>
+      <nav>
+        <button class="workflow-item is-active" type="button" data-view="projects">
+          <span class="step-number">01</span><i data-lucide="folder-kanban"></i><span>Projects</span><span class="step-state is-ready"></span>
+        </button>
+        <button class="workflow-item" type="button" data-view="capture">
+          <span class="step-number">02</span><i data-lucide="camera"></i><span>Capture</span><span class="step-state" id="captureState"></span>
+        </button>
+        <button class="workflow-item" type="button" data-view="processing">
+          <span class="step-number">03</span><i data-lucide="cpu"></i><span>Processing</span><span class="step-state" id="processingState"></span>
+        </button>
+        <button class="workflow-item" type="button" data-view="model">
+          <span class="step-number">04</span><i data-lucide="box"></i><span>Model</span><span class="step-state is-ready" id="modelState"></span>
+        </button>
+        <button class="workflow-item" type="button" data-view="surface">
+          <span class="step-number">05</span><i data-lucide="scan-line"></i><span>Surface analysis</span><span class="step-state" id="surfaceState"></span>
+        </button>
+        <button class="workflow-item" type="button" data-view="measurements">
+          <span class="step-number">06</span><i data-lucide="ruler"></i><span>Measurements</span><span class="step-state" id="measurementState"></span>
+        </button>
+        <button class="workflow-item" type="button" data-view="export">
+          <span class="step-number">07</span><i data-lucide="package-open"></i><span>Export</span><span class="step-state"></span>
+        </button>
+        <button class="workflow-item" type="button" data-view="settings">
+          <span class="step-number">08</span><i data-lucide="settings-2"></i><span>Settings</span><span class="step-state"></span>
+        </button>
+      </nav>
+      <div class="validation-block">
+        <span class="mono-label">MEASUREMENT STATUS</span>
+        <strong><i data-lucide="triangle-alert"></i> Unvalidated</strong>
+        <p>Browser analysis is for workflow evaluation. Attach independent validation before engineering use.</p>
+      </div>
+    </aside>
+
+    <main class="work-area">
+      <section class="content-view is-active" data-content="projects" aria-labelledby="projectsTitle">
+        <div class="section-heading">
+          <div><span class="eyebrow">§ 01 / PROJECT DEFINITION</span><h1 id="projectsTitle">Start with traceable context.</h1></div>
+          <span class="section-code">ENGSCAN.PROJECT.V1</span>
+        </div>
+        <form class="project-form" id="projectForm">
+          <label><span>Project ID</span><input id="projectId" name="projectId" value="BRACKET-001" autocomplete="off"></label>
+          <label><span>Part identifier</span><input id="partId" name="partId" value="AFT-BRKT-07" autocomplete="off"></label>
+          <label><span>Material</span><select id="material" name="material"><option>Aluminum alloy</option><option>Steel</option><option>Titanium</option><option>Composite</option><option>Polymer</option><option>Unknown</option></select></label>
+          <fieldset class="unit-field"><legend>Working units</legend><div class="segmented"><button class="is-selected" type="button" data-unit="mm">mm</button><button type="button" data-unit="in">inch</button></div></fieldset>
+          <label class="wide"><span>Desired features to measure</span><input id="features" name="features" value="Step height, hole spacing, flange width" autocomplete="off"></label>
+          <label class="wide"><span>Notes</span><textarea id="notes" name="notes" rows="4">Stationary part. Diffuse light. Include 50 mm scale reference in frame.</textarea></label>
+          <label class="check-row wide"><input id="coatingUsed" type="checkbox"><span><strong>Removable matte coating used</strong><small>Record only when permitted; coating can change measured dimensions.</small></span></label>
+          <div class="form-actions wide"><button class="button primary" type="submit"><i data-lucide="check"></i> Save project</button><button class="button" type="button" data-go="capture">Continue to capture <i data-lucide="arrow-right"></i></button></div>
+        </form>
+      </section>
+
+      <section class="content-view" data-content="capture" aria-labelledby="captureTitle">
+        <div class="section-heading">
+          <div><span class="eyebrow">§ 02 / IMAGE ACQUISITION</span><h1 id="captureTitle">Build overlapping coverage.</h1></div>
+          <span class="section-code">RGB / DEVICE CAMERA</span>
+        </div>
+        <div class="capture-layout">
+          <div class="capture-zone">
+            <input id="photoInput" type="file" accept="image/*" capture="environment" multiple hidden>
+            <i data-lucide="camera"></i>
+            <strong>Add capture images</strong>
+            <p>Use sharp, evenly exposed views at multiple elevations. Files remain on this device.</p>
+            <button class="button primary" id="addPhotosButton" type="button"><i data-lucide="plus"></i> Add photos</button>
+          </div>
+          <div class="capture-checklist">
+            <div><span>01</span><p><strong>Stationary object</strong>Move the camera around the part. Do not rotate the object in this mode.</p></div>
+            <div><span>02</span><p><strong>Diffuse light</strong>Avoid hard reflections, clipped highlights, and moving shadows.</p></div>
+            <div><span>03</span><p><strong>60–80% overlap</strong>Complete low, middle, and high rings plus top and detail views.</p></div>
+            <div><span>04</span><p><strong>Known reference</strong>Keep the reference visible and avoid placing it on a different depth plane.</p></div>
+          </div>
+        </div>
+        <div class="capture-summary">
+          <div><span class="metric-value" id="photoCount">0</span><span>images</span></div>
+          <div><span class="metric-value" id="captureMegapixels">—</span><span>median MP</span></div>
+          <div><span class="metric-value" id="captureWarnings">0</span><span>warnings</span></div>
+          <button class="button" type="button" data-go="processing">Review processing path <i data-lucide="arrow-right"></i></button>
+        </div>
+        <div class="photo-strip" id="photoStrip" aria-live="polite"><p class="empty-note">No images selected yet.</p></div>
+      </section>
+
+      <section class="content-view" data-content="processing" aria-labelledby="processingTitle">
+        <div class="section-heading">
+          <div><span class="eyebrow">§ 03 / RECONSTRUCTION</span><h1 id="processingTitle">Prepare the local job.</h1></div>
+          <span class="section-code">APPLE PHOTOGRAMMETRY</span>
+        </div>
+        <div class="processing-band">
+          <div class="process-status-icon"><i data-lucide="laptop"></i></div>
+          <div><span class="mono-label">CURRENT ROUTE</span><h2>Browser capture → local Mac companion</h2><p>The browser packages source image metadata. RealityKit photogrammetry runs on a supported local Mac; this page never uploads imagery or fabricates a result.</p></div>
+          <span class="route-state" id="routeState">WAITING FOR IMAGES</span>
+        </div>
+        <div class="process-grid">
+          <div class="process-step is-current"><span>01</span><div><strong>Capture bundle</strong><p id="bundleStatus">Add images to create a browser-side manifest.</p></div></div>
+          <div class="process-step"><span>02</span><div><strong>Mac reconstruction</strong><p>Run the EngineeringScan companion against the exported photo directory.</p></div></div>
+          <div class="process-step"><span>03</span><div><strong>Load mesh here</strong><p>Open STL, PLY, or OBJ output for scale, measurement, and analysis.</p></div></div>
+        </div>
+        <div class="processing-actions">
+          <button class="button primary" id="downloadManifestButton" type="button"><i data-lucide="download"></i> Download capture manifest</button>
+          <button class="button" id="loadDemoButton" type="button"><i data-lucide="flask-conical"></i> Load synthetic step coupon</button>
+          <label class="button file-button"><i data-lucide="folder-open"></i> Open reconstructed mesh<input id="meshInput" type="file" accept=".stl,.ply,.obj" hidden></label>
+        </div>
+      </section>
+
+      <section class="viewer-view" data-content="model" aria-labelledby="modelTitle">
+        <div class="viewer-toolbar">
+          <div><span class="eyebrow">§ 04 / MODEL</span><strong id="modelTitle">SYNTHETIC_STEP_COUPON.PLY</strong></div>
+          <div class="toolbar-actions">
+            <label class="button file-button compact"><i data-lucide="folder-open"></i> Open mesh<input class="mesh-input-clone" type="file" accept=".stl,.ply,.obj" hidden></label>
+            <button class="icon-button" id="fitViewButton" type="button" title="Fit model" aria-label="Fit model"><i data-lucide="maximize"></i></button>
+            <button class="icon-button" id="resetViewButton" type="button" title="Reset view" aria-label="Reset view"><i data-lucide="rotate-ccw"></i></button>
+          </div>
+        </div>
+        <div class="viewport" id="viewport"><canvas id="modelCanvas"></canvas><div class="viewport-note" id="viewportNote">Synthetic geometry / not a scan</div><div class="axis-key"><span class="x">X</span><span class="y">Y</span><span class="z">Z</span></div></div>
+      </section>
+
+      <section class="viewer-view" data-content="surface" aria-labelledby="surfaceTitle">
+        <div class="viewer-toolbar">
+          <div><span class="eyebrow">§ 05 / SURFACE ANALYSIS</span><strong id="surfaceTitle">DATUM-RELATIVE HEIGHT MAP</strong></div>
+          <div class="toolbar-actions"><button class="button compact" id="runHeightMapTop" type="button"><i data-lucide="scan-line"></i> Sample surface</button></div>
+        </div>
+        <div class="viewport" id="surfaceViewport"><canvas id="surfaceCanvas"></canvas><div class="height-overlay"><canvas id="heightMapCanvas" width="320" height="220"></canvas><div class="legend"><span id="legendMax">MAX —</span><div></div><span id="legendMin">MIN —</span></div></div></div>
+      </section>
+
+      <section class="viewer-view" data-content="measurements" aria-labelledby="measurementsTitle">
+        <div class="viewer-toolbar">
+          <div><span class="eyebrow">§ 06 / MEASUREMENTS</span><strong id="measurementsTitle">POINT-TO-POINT DISTANCE</strong></div>
+          <div class="toolbar-actions"><button class="button compact primary" id="measureModeButton" type="button" aria-pressed="false"><i data-lucide="crosshair"></i> Start measure</button><button class="icon-button" id="clearMeasurementsButton" type="button" title="Clear measurements" aria-label="Clear measurements"><i data-lucide="trash-2"></i></button></div>
+        </div>
+        <div class="viewport" id="measurementViewport"><canvas id="measurementCanvas"></canvas><div class="measurement-prompt" id="measurementPrompt">Select Start measure, then choose two points on the mesh.</div></div>
+      </section>
+
+      <section class="content-view" data-content="export" aria-labelledby="exportTitle">
+        <div class="section-heading">
+          <div><span class="eyebrow">§ 07 / DATA PACKAGE</span><h1 id="exportTitle">Export what was measured.</h1></div>
+          <span class="section-code">UNVALIDATED</span>
+        </div>
+        <div class="export-table">
+          <div><i data-lucide="file-json"></i><div><strong>Project manifest</strong><span>Context, acquisition records, scale, transforms, and validation state.</span></div><button class="button compact" id="exportManifestButton" type="button"><i data-lucide="download"></i> JSON</button></div>
+          <div><i data-lucide="table"></i><div><strong>Measurement results</strong><span>Point-to-point distances with explicit units and Unvalidated status.</span></div><button class="button compact" id="exportMeasurementsButton" type="button"><i data-lucide="download"></i> CSV</button></div>
+          <div><i data-lucide="grid-3x3"></i><div><strong>Numeric height map</strong><span>X, Y, signed height, validity, and missing-intersection reason.</span></div><button class="button compact" id="exportHeightButton" type="button"><i data-lucide="download"></i> CSV</button></div>
+          <div><i data-lucide="image"></i><div><strong>Height visualization</strong><span>Color image for review; numeric CSV remains the measurement record.</span></div><button class="button compact" id="exportHeightPngButton" type="button"><i data-lucide="download"></i> PNG</button></div>
+        </div>
+        <p class="export-footnote"><i data-lucide="info"></i> Mesh files contain triangle geometry, not parametric CAD solids. Preserve the accompanying manifest when moving data into CAD or metrology software.</p>
+      </section>
+
+      <section class="content-view" data-content="settings" aria-labelledby="settingsTitle">
+        <div class="section-heading">
+          <div><span class="eyebrow">§ 08 / SETTINGS</span><h1 id="settingsTitle">Analysis conventions.</h1></div>
+          <span class="section-code">LOCAL BROWSER STATE</span>
+        </div>
+        <div class="settings-list">
+          <label><span><strong>Default working units</strong><small>Internal geometry remains millimeters.</small></span><select id="settingsUnits"><option value="mm">Millimeters</option><option value="in">Inches</option></select></label>
+          <label><span><strong>Height-map grid</strong><small>More cells increase browser processing time, not spatial accuracy.</small></span><select id="gridResolution"><option value="20">20 × 20</option><option value="32" selected>32 × 32</option><option value="48">48 × 48</option></select></label>
+          <label class="check-row"><span><strong>Show model edges</strong><small>Visual aid only; does not modify geometry.</small></span><input id="edgeToggle" type="checkbox" checked></label>
+          <label class="check-row"><span><strong>Wireframe</strong><small>Shows reconstruction tessellation.</small></span><input id="wireframeToggle" type="checkbox"></label>
+          <button class="button danger" id="clearLocalButton" type="button"><i data-lucide="eraser"></i> Clear local project state</button>
+        </div>
+      </section>
+    </main>
+
+    <aside class="inspector" id="inspector">
+      <div class="inspector-header"><span>INSPECTOR</span><button class="icon-button inspector-close" id="inspectorClose" type="button" title="Close inspector" aria-label="Close inspector"><i data-lucide="x"></i></button></div>
+      <div class="inspector-section">
+        <span class="mono-label">MODEL SOURCE</span>
+        <div class="source-row"><span class="source-swatch"></span><div><strong id="sourceName">Synthetic step coupon</strong><small id="sourceType">Generated test geometry</small></div></div>
+      </div>
+      <div class="inspector-section">
+        <span class="mono-label">BOUNDS</span>
+        <dl class="data-grid"><dt>X</dt><dd id="boundX">100.00 mm</dd><dt>Y</dt><dd id="boundY">70.00 mm</dd><dt>Z</dt><dd id="boundZ">8.00 mm</dd><dt>TRIANGLES</dt><dd id="triangleCount">24</dd></dl>
+      </div>
+      <div class="inspector-section">
+        <span class="mono-label">SCALE CALIBRATION</span>
+        <label><span>Known reference (mm)</span><input id="referenceLength" type="number" min="0.001" step="0.01" value="50"></label>
+        <label><span>Reference uncertainty (mm)</span><input id="referenceUncertainty" type="number" min="0" step="0.01" value="0.05"></label>
+        <button class="button compact full" id="applyCalibrationButton" type="button">Use latest measurement</button>
+        <p class="status-line" id="scaleStatus"><span></span> Scale not calibrated</p>
+      </div>
+      <div class="inspector-section">
+        <span class="mono-label">DISPLAY</span>
+        <label class="range-label"><span>Clipping plane</span><output id="clipOutput">100%</output></label>
+        <input id="clipSlider" type="range" min="0" max="100" value="100">
+        <div class="toggle-grid"><button class="toggle-button" id="inspectorEdges" type="button" aria-pressed="true"><i data-lucide="triangle"></i> Edges</button><button class="toggle-button" id="inspectorWireframe" type="button" aria-pressed="false"><i data-lucide="grid-2x-2"></i> Wire</button></div>
+      </div>
+      <div class="inspector-section analysis-controls">
+        <span class="mono-label">HEIGHT MAP</span>
+        <label><span>Datum Z (model mm)</span><input id="datumZ" type="number" step="0.01" value="4"></label>
+        <button class="button compact primary full" id="runHeightMapButton" type="button"><i data-lucide="scan-line"></i> Sample surface</button>
+        <dl class="data-grid"><dt>VALID</dt><dd id="heightValid">—</dd><dt>RANGE</dt><dd id="heightRange">—</dd><dt>MEAN</dt><dd id="heightMean">—</dd></dl>
+      </div>
+      <div class="inspector-section measurement-list-section">
+        <span class="mono-label">MEASUREMENTS</span>
+        <div id="measurementList"><p class="empty-note">No measurements recorded.</p></div>
+      </div>
+    </aside>
+
+    <button class="inspector-fab" id="inspectorFab" type="button" aria-label="Open inspector"><i data-lucide="panel-right-open"></i></button>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+</BareLayout>
+
+<script>
+  import "../../scripts/engineering-scan-app.ts";
+</script>
+
+<style>
+  :global(html), :global(body) { height: 100%; overflow: hidden; }
+  :global(body) { margin: 0; }
+  :global(button), :global(input), :global(select), :global(textarea) { font: inherit; }
+  :global(button) { letter-spacing: 0; }
+  .scan-app { --header-h: 62px; --nav-w: 226px; --inspector-w: 286px; display: grid; grid-template-columns: var(--nav-w) minmax(0, 1fr) var(--inspector-w); grid-template-rows: var(--header-h) minmax(0, 1fr); height: 100dvh; background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
+  .app-header { grid-column: 1 / -1; display: grid; grid-template-columns: var(--nav-w) minmax(0, 1fr) auto; align-items: center; border-bottom: 1px solid var(--ink); background: var(--bg); z-index: 20; }
+  .brand-block { height: 100%; display: flex; align-items: center; gap: 11px; padding: 0 14px; border-right: 1px solid var(--rule-strong); }
+  .brand-mark { width: 31px; height: 31px; display: grid; place-items: center; background: var(--ink); color: var(--bg); font: 700 10px/1 var(--font-mono); }
+  .brand-block strong, .brand-block span { display: block; }
+  .brand-block strong { font-size: 14px; }
+  .brand-block span { margin-top: 2px; color: var(--ink-muted); font: 10px/1.2 var(--font-mono); }
+  .project-identity { display: flex; align-items: baseline; gap: 12px; padding: 0 18px; }
+  .project-identity strong { font-size: 13px; }
+  .mono-label, .section-code, .eyebrow { color: var(--ink-muted); font: 500 10px/1.3 var(--font-mono); letter-spacing: .04em; }
+  .header-actions { display: flex; align-items: center; gap: 8px; padding-right: 12px; }
+  .local-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid var(--rule-strong); color: #356448; font: 500 10px/1 var(--font-mono); }
+  .local-chip svg, .button svg, .toggle-button svg { width: 14px; height: 14px; }
+  .icon-button { width: 34px; height: 34px; display: inline-grid; place-items: center; padding: 0; border: 1px solid var(--rule-strong); border-radius: 0; background: transparent; color: var(--ink); cursor: pointer; }
+  .icon-button:hover { background: var(--ink); color: var(--bg); }
+  .icon-button svg { width: 15px; height: 15px; }
+  .mobile-nav-button, .inspector-close, .inspector-fab { display: none; }
+  .workflow-nav { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--rule-strong); background: #efebe1; }
+  .workflow-title, .inspector-header { min-height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: 1px solid var(--rule-strong); color: var(--ink-muted); font: 600 9px/1 var(--font-mono); letter-spacing: .08em; }
+  .workflow-nav nav { padding: 8px; }
+  .workflow-item { width: 100%; min-height: 43px; display: grid; grid-template-columns: 24px 19px minmax(0, 1fr) 8px; align-items: center; gap: 8px; padding: 0 9px; border: 0; border-left: 2px solid transparent; border-radius: 0; background: transparent; color: var(--ink-muted); text-align: left; cursor: pointer; }
+  .workflow-item:hover { background: rgba(26,26,26,.05); color: var(--ink); }
+  .workflow-item.is-active { border-left-color: var(--accent); background: var(--bg); color: var(--ink); font-weight: 600; }
+  .workflow-item svg { width: 15px; height: 15px; }
+  .step-number { color: var(--ink-faint); font: 9px/1 var(--font-mono); }
+  .step-state { width: 6px; height: 6px; border: 1px solid var(--ink-faint); border-radius: 50%; }
+  .step-state.is-ready { border-color: #397650; background: #397650; }
+  .validation-block { margin-top: auto; padding: 16px 14px 18px; border-top: 1px solid var(--rule-strong); }
+  .validation-block strong { display: flex; align-items: center; gap: 7px; margin: 8px 0; color: var(--accent-ink); font-size: 12px; }
+  .validation-block strong svg { width: 14px; }
+  .validation-block p { margin: 0; color: var(--ink-muted); font-size: 11px; line-height: 1.45; }
+  .work-area { grid-column: 2; grid-row: 2; min-width: 0; min-height: 0; overflow: auto; position: relative; }
+  .content-view, .viewer-view { display: none; min-height: 100%; }
+  .content-view.is-active { display: block; padding: clamp(24px, 4vw, 58px); }
+  .viewer-view.is-active { display: grid; grid-template-rows: 54px minmax(0, 1fr); height: 100%; }
+  .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding-bottom: 28px; border-bottom: 1px solid var(--ink); }
+  .eyebrow { display: block; color: var(--accent-ink); }
+  .section-heading h1 { max-width: 720px; margin: 12px 0 0; font-size: clamp(28px, 4vw, 52px); line-height: .98; letter-spacing: 0; font-weight: 500; }
+  .section-code { padding-top: 3px; white-space: nowrap; }
+  .project-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 28px; max-width: 900px; padding-top: 32px; }
+  label > span, fieldset legend { display: block; margin-bottom: 7px; color: var(--ink-muted); font: 500 10px/1.2 var(--font-mono); text-transform: uppercase; }
+  input, select, textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--rule-strong); border-radius: 0; background: rgba(255,255,255,.38); color: var(--ink); padding: 11px 12px; outline: none; }
+  input:focus, select:focus, textarea:focus { border-color: var(--ink); box-shadow: inset 3px 0 var(--accent); }
+  textarea { resize: vertical; }
+  .wide { grid-column: 1 / -1; }
+  .unit-field { margin: 0; padding: 0; border: 0; }
+  .segmented { display: flex; border: 1px solid var(--rule-strong); width: fit-content; }
+  .segmented button { min-width: 76px; padding: 10px 14px; border: 0; border-right: 1px solid var(--rule-strong); border-radius: 0; background: transparent; cursor: pointer; }
+  .segmented button:last-child { border-right: 0; }
+  .segmented button.is-selected { background: var(--ink); color: var(--bg); }
+  .check-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 15px 0; border-top: 1px solid var(--rule); }
+  .check-row input { flex: 0 0 auto; width: 18px; height: 18px; accent-color: var(--accent); }
+  .check-row strong, .check-row small { display: block; }
+  .check-row strong { font-size: 13px; }
+  .check-row small { margin-top: 3px; color: var(--ink-muted); font-size: 11px; }
+  .form-actions, .processing-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 4px; }
+  .button { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; padding: 9px 13px; border: 1px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); font: 600 10px/1 var(--font-mono); text-transform: uppercase; cursor: pointer; }
+  .button:hover { background: var(--ink); color: var(--bg); }
+  .button.primary { background: var(--ink); color: var(--bg); }
+  .button.primary:hover { background: var(--accent); border-color: var(--accent); }
+  .button.compact { min-height: 32px; padding: 7px 10px; }
+  .button.full { width: 100%; }
+  .button.danger { border-color: var(--accent); color: var(--accent-ink); }
+  .file-button input { display: none; }
+  .capture-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 32px; padding-top: 32px; }
+  .capture-zone { min-height: 290px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; border: 1px dashed var(--rule-strong); text-align: center; background: rgba(255,255,255,.25); }
+  .capture-zone > svg { width: 36px; height: 36px; margin-bottom: 18px; stroke-width: 1.4; }
+  .capture-zone strong { font-size: 20px; font-weight: 500; }
+  .capture-zone p { max-width: 440px; margin: 8px 0 20px; color: var(--ink-muted); font-size: 13px; line-height: 1.5; }
+  .capture-checklist { border-top: 1px solid var(--ink); }
+  .capture-checklist > div { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 15px 0; border-bottom: 1px solid var(--rule); }
+  .capture-checklist > div > span { color: var(--accent); font: 500 10px/1.4 var(--font-mono); }
+  .capture-checklist p { margin: 0; color: var(--ink-muted); font-size: 12px; line-height: 1.4; }
+  .capture-checklist strong { display: block; margin-bottom: 3px; color: var(--ink); font-size: 12px; }
+  .capture-summary { display: flex; align-items: center; gap: 0; margin-top: 28px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+  .capture-summary > div { min-width: 120px; padding: 15px 20px 14px 0; }
+  .capture-summary > div + div { padding-left: 20px; border-left: 1px solid var(--rule-strong); }
+  .capture-summary > div span { display: block; color: var(--ink-muted); font: 9px/1 var(--font-mono); text-transform: uppercase; }
+  .capture-summary .metric-value { margin-bottom: 6px; color: var(--ink); font: 500 24px/1 var(--font-sans); }
+  .capture-summary .button { margin-left: auto; }
+  .photo-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; padding-top: 18px; }
+  .photo-tile { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--rule); background: var(--bg-elev); }
+  .photo-tile img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-tile span { position: absolute; right: 4px; bottom: 4px; padding: 3px 5px; background: rgba(26,26,26,.82); color: #fff; font: 8px/1 var(--font-mono); }
+  .empty-note { margin: 0; color: var(--ink-muted); font-size: 11px; }
+  .processing-band { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 28px 0; border-bottom: 1px solid var(--rule-strong); }
+  .process-status-icon { width: 50px; height: 50px; display: grid; place-items: center; border: 1px solid var(--ink); }
+  .process-status-icon svg { width: 22px; }
+  .processing-band h2 { margin: 5px 0; font-size: 19px; font-weight: 500; }
+  .processing-band p { max-width: 720px; margin: 0; color: var(--ink-muted); font-size: 12px; line-height: 1.5; }
+  .route-state { padding: 7px 9px; border: 1px solid var(--rule-strong); font: 600 9px/1 var(--font-mono); }
+  .process-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--ink); }
+  .process-step { min-height: 145px; display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 24px 18px 24px 0; border-right: 1px solid var(--rule-strong); }
+  .process-step + .process-step { padding-left: 18px; }
+  .process-step:last-child { border-right: 0; }
+  .process-step > span { color: var(--ink-faint); font: 10px/1.4 var(--font-mono); }
+  .process-step strong { font-size: 13px; }
+  .process-step p { margin: 8px 0 0; color: var(--ink-muted); font-size: 11px; line-height: 1.5; }
+  .process-step.is-current > span { color: var(--accent); }
+  .processing-actions { margin-top: 26px; }
+  .viewer-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 13px; border-bottom: 1px solid var(--rule-strong); }
+  .viewer-toolbar strong { display: block; margin-top: 4px; font: 600 10px/1 var(--font-mono); }
+  .toolbar-actions { display: flex; align-items: center; gap: 7px; }
+  .viewport { min-width: 0; min-height: 0; position: relative; overflow: hidden; background: #e9e7df; }
+  .viewport canvas:first-child { width: 100%; height: 100%; display: block; touch-action: none; }
+  .viewport-note, .measurement-prompt { position: absolute; left: 12px; bottom: 12px; padding: 7px 9px; border: 1px solid var(--rule-strong); background: rgba(245,242,234,.9); color: var(--ink-muted); font: 9px/1 var(--font-mono); }
+  .axis-key { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 4px; }
+  .axis-key span { width: 24px; height: 24px; display: grid; place-items: center; background: var(--ink); color: #fff; font: 600 9px/1 var(--font-mono); }
+  .axis-key .x { background: #b34030; } .axis-key .y { background: #397650; } .axis-key .z { background: #355f8a; }
+  .height-overlay { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 8px; padding: 9px; border: 1px solid var(--rule-strong); background: rgba(245,242,234,.94); }
+  #heightMapCanvas { width: 240px; height: 165px; border: 1px solid var(--rule); image-rendering: pixelated; }
+  .legend { display: grid; grid-template-rows: auto 1fr auto; gap: 5px; color: var(--ink-muted); font: 8px/1 var(--font-mono); }
+  .legend div { width: 10px; background: linear-gradient(to bottom, #b34030, #e6ad54, #f5f2ea, #4c8a9b, #274766); }
+  .measurement-prompt { left: 50%; bottom: 18px; transform: translateX(-50%); white-space: nowrap; }
+  .export-table { border-top: 1px solid var(--ink); margin-top: 32px; }
+  .export-table > div { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--rule-strong); }
+  .export-table > div > svg { width: 20px; }
+  .export-table strong, .export-table span { display: block; }
+  .export-table strong { font-size: 13px; }
+  .export-table span { margin-top: 4px; color: var(--ink-muted); font-size: 11px; }
+  .export-footnote { display: flex; gap: 8px; max-width: 700px; margin: 22px 0 0; color: var(--ink-muted); font-size: 11px; line-height: 1.5; }
+  .export-footnote svg { flex: 0 0 auto; width: 14px; }
+  .settings-list { max-width: 760px; margin-top: 32px; border-top: 1px solid var(--ink); }
+  .settings-list > label { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 28px; border-bottom: 1px solid var(--rule-strong); }
+  .settings-list label > span { margin: 0; text-transform: none; }
+  .settings-list strong, .settings-list small { display: block; }
+  .settings-list strong { color: var(--ink); font: 600 13px/1.2 var(--font-sans); }
+  .settings-list small { margin-top: 4px; color: var(--ink-muted); font: 11px/1.4 var(--font-sans); }
+  .settings-list select { width: 180px; }
+  .settings-list .button { margin-top: 22px; }
+  .inspector { grid-column: 3; grid-row: 2; min-height: 0; overflow-y: auto; border-left: 1px solid var(--rule-strong); background: #f8f6ef; }
+  .inspector-section { padding: 15px 13px; border-bottom: 1px solid var(--rule-strong); }
+  .source-row { display: flex; align-items: center; gap: 9px; margin-top: 10px; }
+  .source-swatch { width: 10px; height: 32px; background: var(--accent); }
+  .source-row strong, .source-row small { display: block; }
+  .source-row strong { font-size: 11px; }
+  .source-row small { margin-top: 3px; color: var(--ink-muted); font-size: 9px; }
+  .data-grid { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 11px 0 0; }
+  .data-grid dt { color: var(--ink-muted); font: 9px/1 var(--font-mono); }
+  .data-grid dd { margin: 0; font: 500 10px/1 var(--font-mono); }
+  .inspector label { display: block; margin-top: 11px; }
+  .inspector label > span { font-size: 8px; }
+  .inspector input { padding: 8px 9px; font: 11px/1 var(--font-mono); }
+  .status-line { display: flex; align-items: center; gap: 7px; margin: 10px 0 0; color: var(--ink-muted); font-size: 9px; }
+  .status-line span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .range-label { display: flex !important; justify-content: space-between; align-items: center; }
+  .range-label output { font: 9px/1 var(--font-mono); }
+  input[type="range"] { height: 18px; padding: 0; border: 0; background: transparent; accent-color: var(--accent); box-shadow: none; }
+  .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+  .toggle-button { min-height: 34px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--rule-strong); border-radius: 0; background: transparent; color: var(--ink-muted); font: 500 9px/1 var(--font-mono); cursor: pointer; }
+  .toggle-button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+  .measurement-item { padding: 9px 0; border-bottom: 1px solid var(--rule); }
+  .measurement-item div { display: flex; justify-content: space-between; gap: 8px; }
+  .measurement-item strong { font: 600 10px/1 var(--font-mono); }
+  .measurement-item span { color: var(--accent-ink); font: 600 10px/1 var(--font-mono); }
+  .measurement-item small { display: block; margin-top: 5px; color: var(--ink-muted); font-size: 8px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; z-index: 50; max-width: calc(100vw - 32px); transform: translate(-50%, 14px); opacity: 0; pointer-events: none; padding: 10px 13px; background: var(--ink); color: var(--bg); font: 500 10px/1.3 var(--font-mono); transition: opacity var(--duration-fast), transform var(--duration-fast); }
+  .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 1020px) {
+    .scan-app { --nav-w: 192px; --inspector-w: 250px; }
+    .workflow-item { grid-template-columns: 20px 17px minmax(0,1fr) 7px; gap: 6px; padding: 0 6px; font-size: 11px; }
+    .capture-layout { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 820px) {
+    .scan-app { grid-template-columns: minmax(0,1fr); grid-template-rows: var(--header-h) minmax(0,1fr); }
+    .app-header { grid-template-columns: minmax(0,1fr) auto; }
+    .brand-block { border-right: 0; }
+    .project-identity, .local-chip { display: none; }
+    .mobile-nav-button { display: inline-grid; }
+    .workflow-nav { position: fixed; inset: var(--header-h) auto 0 0; z-index: 30; width: min(82vw, 300px); transform: translateX(-100%); transition: transform var(--duration-normal) var(--ease-out); box-shadow: 18px 0 40px rgba(26,26,26,.12); }
+    .scan-app.nav-open .workflow-nav { transform: translateX(0); }
+    .work-area { grid-column: 1; grid-row: 2; }
+    .inspector { position: fixed; inset: var(--header-h) 0 0 auto; z-index: 31; width: min(86vw, 320px); transform: translateX(100%); transition: transform var(--duration-normal) var(--ease-out); box-shadow: -18px 0 40px rgba(26,26,26,.12); }
+    .scan-app.inspector-open .inspector { transform: translateX(0); }
+    .inspector-close { display: inline-grid; width: 28px; height: 28px; }
+    .inspector-fab { position: fixed; right: 12px; bottom: 12px; z-index: 25; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); }
+    .content-view.is-active { padding: 24px 18px 70px; }
+    .project-form { grid-template-columns: 1fr; }
+    .wide { grid-column: auto; }
+    .section-heading { display: block; }
+    .section-code { display: block; margin-top: 18px; }
+    .process-grid { grid-template-columns: 1fr; }
+    .process-step, .process-step + .process-step { min-height: 0; padding: 18px 0; border-right: 0; border-bottom: 1px solid var(--rule); }
+    .processing-band { grid-template-columns: 44px 1fr; }
+    .route-state { grid-column: 1 / -1; width: fit-content; }
+  }
+  @media (max-width: 560px) {
+    .brand-block span { display: none; }
+    .header-actions { padding-right: 8px; }
+    .capture-summary { align-items: stretch; flex-wrap: wrap; }
+    .capture-summary > div { flex: 1; min-width: 90px; }
+    .capture-summary .button { width: 100%; margin: 0 0 12px; }
+    .viewer-toolbar { align-items: center; }
+    .viewer-toolbar .button.file-button { width: 34px; padding: 0; font-size: 0; }
+    .height-overlay { right: 8px; left: 8px; bottom: 8px; }
+    #heightMapCanvas { width: calc(100% - 42px); height: auto; }
+    .measurement-prompt { left: 8px; right: 8px; transform: none; white-space: normal; text-align: center; }
+    .export-table > div { grid-template-columns: 28px minmax(0,1fr); }
+    .export-table .button { grid-column: 2; width: fit-content; }
+    .settings-list > label { align-items: flex-start; flex-direction: column; gap: 10px; padding: 15px 0; }
+    .settings-list select { width: 100%; }
+  }
+</style>

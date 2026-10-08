@@ -76,3 +76,29 @@ test("exports engineering CSV with validity and units", () => {
   assert.match(measurementCsv, /M-001,1,Unvalidated/);
 });
 
+test("reports an entirely missing sample region", () => {
+  const map = buildHeightMap({
+    bounds: { minX: 0, maxX: 0, minY: 0, maxY: 0 },
+    columns: 1,
+    rows: 1,
+    sample: () => undefined,
+  });
+  assert.deepEqual(summarizeHeightMap(map), {
+    validCount: 0,
+    missingCount: 1,
+    minimum: null,
+    maximum: null,
+    mean: null,
+  });
+});
+
+test("rejects invalid height grids and export units", () => {
+  assert.throws(() => buildHeightMap({
+    bounds: { minX: 0, maxX: 1, minY: 0, maxY: 1 },
+    columns: 0,
+    rows: 2,
+    sample: () => 0,
+  }), /positive integers/);
+  assert.throws(() => heightMapToCsv({ cells: [] }, "cm"), /Unsupported unit/);
+  assert.throws(() => measurementToCsv([], "cm"), /Unsupported unit/);
+});
