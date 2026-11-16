@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Safe-Drop Progress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a field-test report. Split hero with a live CAD stage, then a run-by-run results chart that is the page's centerpiece. */
+:root {
+  --bg: #f1f3f5;
+  --surface: #ffffff;
+  --stage: #e3e8ec;
+  --ink: #121a22;
+  --muted: #56626e;
+  --line: #d3d9df;
+  --accent: #d9530a;
+  --accent-soft: #fbe7da;
+  --steel: #2f6488;
+  --steel-soft: #dde9f2;
+  --pass: #2e8a57;
+  --pass-soft: rgba(46, 138, 87, 0.12);
+  --fail: #c03a31;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.75rem;
+  --step-3: clamp(2.5rem, 1.6rem + 3.6vw, 4.25rem);
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1217; --surface: #141c23; --stage: #10181f; --ink: #e6ecf1; --muted: #93a1ae; --line: #25313b;
+    --accent: #ff7a33; --accent-soft: #3a2116; --steel: #7fb2d6; --steel-soft: #182a37;
+    --pass: #5cc48f; --pass-soft: rgba(92, 196, 143, 0.12); --fail: #f06a5f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1217; --surface: #141c23; --stage: #10181f; --ink: #e6ecf1; --muted: #93a1ae; --line: #25313b;
+  --accent: #ff7a33; --accent-soft: #3a2116; --steel: #7fb2d6; --steel-soft: #182a37;
+  --pass: #5cc48f; --pass-soft: rgba(92, 196, 143, 0.12); --fail: #f06a5f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: var(--step-0); line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1.05; text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
+h2 { font-size: var(--step-2); text-transform: uppercase; }
+h3 { font-size: var(--step-1); }
+p { margin: 0; max-width: 65ch; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.label { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* masthead */
+.mast { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding-block: 20px 14px; border-bottom: 1px solid var(--line); }
+.mast b { font-family: var(--display); font-size: var(--step-1); letter-spacing: 0.04em; text-transform: uppercase; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; padding-block: 40px 28px; align-items: center; }
+.hero h1 { font-size: var(--step-3); text-transform: uppercase; }
+.hero h1 span { color: var(--accent); }
+.hero .lede { font-size: var(--step-1); line-height: 1.45; margin-top: 18px; }
+.hero .note { color: var(--muted); margin-top: 14px; }
+.stage { position: relative; background: var(--stage); border-radius: var(--radius); height: clamp(340px, 46vw, 540px);
+  max-width: 100%; overflow: hidden; border: 1px solid var(--line); }
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.stage .status { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-family: var(--mono); font-size: var(--step--1); }
+.stage .hud { position: absolute; left: 12px; top: 12px; right: 12px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; }
+.stage .hud span { background: color-mix(in srgb, var(--surface) 85%, transparent); padding: 4px 8px; border-radius: 4px; }
+.stage .fallback { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
+.stage .fallback img { width: 100%; height: 100%; object-fit: contain; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.controls button { font: 500 var(--step--1)/1 var(--mono); letter-spacing: 0.05em; text-transform: uppercase; padding: 10px 14px;
+  border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; transition: border-color .15s, background .15s; }
+.controls button:hover { border-color: var(--accent); }
+.controls button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.caption { color: var(--muted); font-size: var(--step--1); margin-top: 10px; }
+.key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; font-size: var(--step--1); color: var(--muted); }
+.key i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+/* criteria strip */
+.criteria { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-block: 1px solid var(--line); margin-block: 12px 0; }
+.criteria div { padding: 18px 16px; border-left: 1px solid var(--line); display: grid; gap: 4px; }
+.criteria div:first-child { border-left: 0; }
+.criteria strong { font-family: var(--display); font-size: var(--step-2); text-transform: uppercase; line-height: 1; }
+.criteria .num { color: var(--accent); }
+
+section { padding-block: 56px 0; }
+.sec-head { display: grid; gap: 8px; margin-bottom: 24px; }
+
+/* subsystems */
+.systems { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.sys { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 10px; align-content: start; }
+.chip { justify-self: start; font: 500 0.72rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 8px; border-radius: 4px; }
+.chip.built { background: var(--accent-soft); color: var(--accent); }
+.chip.plan { background: transparent; color: var(--muted); border: 1px dashed var(--line); }
+
+/* builds */
+.build { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 28px; padding-block: 28px; border-top: 1px solid var(--line); align-items: start; }
+.build:first-of-type { border-top: 0; padding-top: 0; }
+.build .who { color: var(--muted); font-size: var(--step--1); }
+.build .copy { display: grid; gap: 12px; }
+.tag { display: inline-flex; align-items: center; gap: 8px; font: 500 var(--step--1)/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.tag i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.photos { display: grid; gap: 8px; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); }
+.photos figure { margin: 0; display: grid; gap: 6px; }
+.photos img { width: 100%; aspect-ratio: var(--ar, 3 / 4); object-fit: cover; border-radius: 4px; background: var(--stage); }
+.photos figcaption { font-size: var(--step--1); color: var(--muted); }
+.wide img { aspect-ratio: auto; }
+
+/* studio cutouts */
+.studio-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: stretch; }
+.studio { margin: 0; display: grid; grid-template-rows: 1fr auto; gap: 10px; padding: 18px 18px 14px; border-radius: var(--radius);
+  background: radial-gradient(120% 90% at 50% 30%, var(--surface) 0%, var(--stage) 100%); border: 1px solid var(--line); }
+.studio img { width: 100%; height: clamp(220px, 26vw, 320px); object-fit: contain; filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.22)); }
+.studio figcaption { display: grid; gap: 2px; font-size: var(--step--1); color: var(--muted); }
+.studio figcaption .label { color: var(--accent); }
+.specs { margin: 0; display: grid; align-content: center; gap: 0; border-top: 1px solid var(--line); }
+.specs div { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 12px; padding-block: 10px; border-bottom: 1px solid var(--line); }
+.specs dt { font: 500 var(--step--1) var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.specs dd { margin: 0; }
+
+/* results */
+.results-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.aside-note { color: var(--muted); font-size: var(--step--1); }
+.chart-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 16px 12px; overflow-x: auto; }
+.chart-box #chart { display: block; width: 100%; min-width: 520px; height: auto; }
+.legend svg { width: 14px; height: 14px; flex: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 0 0 12px; font-size: var(--step--1); color: var(--muted); }
+.legend svg { vertical-align: -3px; margin-right: 6px; }
+.totals { display: grid; gap: 12px; }
+.total { display: grid; gap: 6px; padding: 16px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); }
+.total strong { font: 700 var(--step-3)/0.9 var(--display); }
+.total.a strong { color: var(--accent); }
+.total.b strong { color: var(--steel); }
+.method { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 28px; margin-bottom: 22px; }
+.method div { display: grid; gap: 4px; }
+
+/* requirements */
+.reqs { width: 100%; border-collapse: collapse; }
+.reqs th, .reqs td { text-align: left; padding: 14px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.reqs th { font: 500 var(--step--1) var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.reqs td:first-child { font-weight: 500; }
+.pill { display: inline-block; white-space: nowrap; font: 500 0.72rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 8px; border-radius: 4px; }
+.pill.met { background: var(--pass-soft); color: var(--pass); }
+.pill.part { background: var(--accent-soft); color: var(--accent); }
+.pill.no { background: color-mix(in srgb, var(--fail) 14%, transparent); color: var(--fail); }
+.pill.open { border: 1px dashed var(--line); color: var(--muted); }
+.table-scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.table-scroll table { min-width: 620px; }
+
+/* lessons */
+.lessons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; }
+.lesson { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; padding-block: 18px; border-top: 1px solid var(--line); }
+.lesson .num { color: var(--accent); font-size: var(--step-1); line-height: 1.3; }
+.evidence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.evidence figure { margin: 0; display: grid; gap: 6px; }
+.evidence img { width: 100%; border-radius: 4px; }
+.evidence figcaption { font-size: var(--step--1); color: var(--muted); }
+
+/* videos */
+.videos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.video { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 16px; align-items: center; padding: 12px; border: 1px solid var(--line);
+  border-radius: var(--radius); background: var(--surface); text-decoration: none; color: var(--ink); transition: border-color .15s, transform .15s; }
+.video:hover { border-color: var(--accent); transform: translateY(-2px); }
+.video img { width: 100%; aspect-ratio: 16 / 10; object-fit: contain; padding: 6px; border-radius: 4px; background: radial-gradient(circle at 50% 35%, var(--surface), var(--stage)); filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.15)); }
+.video .url { font-family: var(--mono); font-size: var(--step--1); color: var(--accent); overflow-wrap: anywhere; }
+
+footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; color: var(--muted); font-size: var(--step--1); }
+
+@media (max-width: 860px) {
+  .hero, .build { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .systems { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .criteria { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .criteria div:nth-child(3) { border-left: 0; }
+  .criteria div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .lessons, .videos, .evidence, .method, .results-grid { grid-template-columns: minmax(0, 1fr); }
+  .totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .totals .aside-note { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .systems, .totals { grid-template-columns: minmax(0, 1fr); }
+  .photos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .video { grid-template-columns: 96px minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .video, .controls button { transition: none; } .video:hover { transform: none; } }
+
+/* simplified layout */
+.status-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-block: 1px solid var(--line); margin-top: 8px; }
+.status-strip > div { padding: 18px 16px; border-left: 1px solid var(--line); display: grid; gap: 6px; align-content: start; }
+.status-strip > div:first-child { border-left: 0; padding-left: 0; }
+.status-strip strong { font-family: var(--display); font-size: var(--step-2); text-transform: uppercase; line-height: 1; }
+.status-strip .pill { justify-self: start; }
+.status-strip p { color: var(--muted); font-size: var(--step--1); }
+.muted { color: var(--muted); }
+.lessons { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.videos-sec { padding-top: 40px; display: grid; gap: 12px; }
+.video { grid-template-columns: minmax(0, 1fr) auto; }
+.video .arrow { font-size: var(--step-1); color: var(--accent); }
+@media (max-width: 860px) {
+  .status-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .status-strip > div:nth-child(3) { border-left: 0; padding-left: 0; }
+  .status-strip > div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .lessons { grid-template-columns: minmax(0, 1fr); }
+  .studio-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .studio-row { grid-template-columns: minmax(0, 1fr); }
+  .status-strip { grid-template-columns: minmax(0, 1fr); }
+  .status-strip > div { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); }
+}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="mast">
+    <b>Safe-Drop</b>
+    <span class="label">MEE 488 Team 9 · Arizona State University · Progress update, Nov 2026</span>
+  </header>
+
+  <div class="hero">
+    <div>
+      <p class="label">Precision aerial delivery</p>
+      <h1>The last <span>30 meters</span> are the hard part</h1>
+      <p class="lede">Safe-Drop lowers a package on a line onto steep, rough or soft ground, so the drone never has to land.</p>
+      <p class="note">You helped us define this problem in September. Here is what we built and tested since, and where it falls short.</p>
+    </div>
+    <div>
+      <div class="stage" id="stage">
+        <canvas id="cad" aria-label="3D model of the half-scale prototype. Drag to rotate, scroll or pinch to zoom."></canvas>
+        <div class="status" id="status">Loading the CAD model…</div>
+        <div class="hud label" aria-hidden="true"><span id="phase">Lowering</span><span>Drag to rotate</span></div>
+      </div>
+      <div class="controls" role="group" aria-label="Delivery sequence">
+        <button type="button" id="btn-lower" data-phase="lower" aria-pressed="true">1 · Lowering</button>
+        <button type="button" id="btn-land" data-phase="land" aria-pressed="false">2 · Touchdown</button>
+        <button type="button" id="btn-release" data-phase="release" aria-pressed="false">3 · Release</button>
+      </div>
+      <div class="key">
+        <span><i style="background:var(--accent)"></i>Passive hook release</span>
+        <span><i style="background:var(--steel)"></i>Ratcheting legs</span>
+        <span><i style="background:var(--muted)"></i>Payload capsule</span>
+      </div>
+      <p class="caption">Half-scale CAD: 200 mm capsule with ratcheting legs and TPU feet, carried by Jason Del Aguila's passive hook. In the full system a winch lowers it from the drone.</p>
+    </div>
+  </div>
+
+  <section class="status-strip" aria-label="Where the design stands against what a good delivery means">
+    <div><span class="label">Upright</span><strong>Within <span class="num">10°</span></strong><span class="pill part">Flat ground only</span><p>Every flat, hard run passed. On ramps of 20° or more, 2 of 9.</p></div>
+    <div><span class="label">Drone clear</span><strong><span class="num">≥ 0.5 m</span> up</strong><span class="pill met">Met by design</span><p>Only the package touches the ground.</p></div>
+    <div><span class="label">Intact</span><strong>No damage</strong><span class="pill open">Not measured</span><p>Contact speed and g load need the winch.</p></div>
+    <div><span class="label">In zone</span><strong>Drop zone</strong><span class="pill open">Not tested</span><p>Needs flight tests with the drone.</p></div>
+  </section>
+
+  <section aria-labelledby="built-h">
+    <div class="sec-head">
+      <p class="label">Built this month · half scale · lowered by hand</p>
+      <h2 id="built-h">What we built</h2>
+    </div>
+    <div class="studio-row">
+      <figure class="studio"><img src="cutouts/hook-holding.webp" alt="Printed hook closed around the loop on top of the capsule" width="741" height="1000" loading="lazy"><figcaption><span class="label">Passive hook release</span>The package's weight holds it shut. At touchdown a spring swings it open. No electronics.</figcaption></figure>
+      <figure class="studio"><img src="cutouts/ratchet-slope.webp" alt="Prototype with ratcheting legs set on a ramp" width="623" height="833" loading="lazy"><figcaption><span class="label">Build A · ratcheting legs</span>Legs lock against the ground as it settles. Tested with the hook.</figcaption></figure>
+      <figure class="studio"><img src="cutouts/spring-legs.webp" alt="Spring-leg prototype with a phone tilt logger on top and an angle gauge in front" width="518" height="957" loading="lazy"><figcaption><span class="label">Build B · spring legs</span>Each leg folds if it hits first. A phone on top logged tilt.</figcaption></figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="results-h">
+    <div class="sec-head">
+      <p class="label">36 test runs</p>
+      <h2 id="results-h">Every run, by surface</h2>
+      <p class="muted">Each dot is one run: how far the package leaned after release. A pass is within 10°, a clean release, and no tip-over.</p>
+    </div>
+    <div class="results-grid">
+    <div class="chart-box">
+      <div class="legend" aria-hidden="true">
+        <span><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="var(--accent)"/></svg>Build A, passed</span>
+        <span><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="var(--steel)"/></svg>Build B, passed</span>
+        <span><svg width="14" height="14"><circle cx="7" cy="7" r="4.5" fill="none" stroke="var(--muted)" stroke-width="2"/></svg>Over 10°</span>
+        <span><svg width="14" height="14"><path d="M3 3l8 8M11 3l-8 8" stroke="var(--fail)" stroke-width="2"/></svg>Tipped over</span>
+      </div>
+      <svg id="chart" role="img" aria-labelledby="chart-t" viewBox="0 0 664 380"><title id="chart-t">Tilt after release for every run, grouped by surface and build</title></svg>
+    </div>
+    <aside class="totals">
+      <div class="total a"><strong class="num">12/24</strong><span>Build A passed</span></div>
+      <div class="total b"><strong class="num">7/12</strong><span>Build B passed</span></div>
+    </aside>
+    </div>
+  </section>
+
+  <section aria-labelledby="learn-h">
+    <div class="sec-head">
+      <p class="label">What we learned</p>
+      <h2 id="learn-h">Flat ground is solved. Slopes are the gap.</h2>
+    </div>
+    <div class="lessons">
+      <div class="lesson"><span class="num">01</span><p>Both leg designs passed every run on flat, hard ground.</p></div>
+      <div class="lesson"><span class="num">02</span><p>On a ramp the hanging package tilts to the slope before the legs can adjust. Above 20° that is too late.</p></div>
+      <div class="lesson"><span class="num">03</span><p>The hook can open early if the package drops suddenly, so the winch has to lower smoothly.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="vid-h" class="videos-sec">
+    <h2 id="vid-h" class="label">Watch the runs</h2>
+    <div class="videos">
+      <a class="video" href="https://youtu.be/R2b-MG8K9zk" target="_blank" rel="noopener"><span><strong>Build A with the hook</strong><br><span class="url">youtu.be/R2b-MG8K9zk</span></span><span aria-hidden="true" class="arrow">↗</span></a>
+      <a class="video" href="https://youtu.be/QpBJY0mLdU0" target="_blank" rel="noopener"><span><strong>Build B, best run per surface</strong><br><span class="url">youtu.be/QpBJY0mLdU0</span></span><span aria-hidden="true" class="arrow">↗</span></a>
+    </div>
+  </section>
+
+  <footer>
+
+</div>
+
+<script>
+// Results chart: one lane per build inside each surface row; tilt after release on a 0 to 30 degree axis.
+(function drawChart() {
+  const T = null; // tipped over
+  const groups = [
+    ["Flat, hard", [["A", [1.8, 3.4, 1.0]], ["B", [0.6, 0.1, 0.1]]]],
+    ["Flat, hard, debris", [["A", [3.8, 1.0, 0.8]]]],
+    ["Flat, soft", [["A", [T, T, 15.3], "pillow"], ["B", [0.7, 0.4, 3.3], "towel"]]],
+    ["Flat, soft, debris", [["A", [T, 4.8, 13.2]]]],
+    ["Ramp, hard", [["A", [15.8, 6.4, T], "30°"], ["B", [20.3, T, 12.0], "20.5°"]]],
+    ["Ramp, hard, debris", [["A", [3.5, 6.3, 3.2], "13°"]]],
+    ["Ramp, soft", [["A", [8.7, 14.3, T]], ["B", [T, T, 8.1], "27°"]]],
+    ["Ramp, soft, debris", [["A", [24.2, 19.8, 14.8]]]],
+  ];
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("chart");
+  const W = 664, nameX = 0, tagX = 150, left = 222, right = 580, tipX = 636, top = 30, laneH = 22, gap = 10, max = 25;
+  const color = { A: "var(--accent)", B: "var(--steel)" };
+  const x = v => left + (Math.min(v, max) / max) * (right - left);
+  const lanes = groups.reduce((n, g) => n + g[1].length, 0);
+  const bottom = top + lanes * laneH + (groups.length - 1) * gap;
+  svg.setAttribute("viewBox", `0 0 ${W} ${bottom + 8}`);
+  const el = (name, attrs, text) => {
+    const n = document.createElementNS(NS, name);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (text != null) n.textContent = text;
+    svg.appendChild(n);
+    return n;
+  };
+  const mono = "IBM Plex Mono, ui-monospace, monospace";
+  const sans = "IBM Plex Sans, Arial, sans-serif";
+  el("rect", { x: x(0), y: top - 4, width: x(10) - x(0), height: bottom - top + 4, fill: "var(--pass-soft)" });
+  for (let v = 0; v <= max; v += 5) {
+    if (v !== 10) el("line", { x1: x(v), x2: x(v), y1: top - 4, y2: bottom, stroke: "var(--line)" });
+    el("text", { x: x(v), y: top - 12, "text-anchor": "middle", fill: v === 10 ? "var(--pass)" : "var(--muted)", "font-size": 11, "font-family": mono }, v === 10 ? "10° limit" : `${v}°`);
+  }
+  el("line", { x1: x(10), x2: x(10), y1: top - 4, y2: bottom, stroke: "var(--pass)", "stroke-width": 2, "stroke-dasharray": "4 3" });
+  el("text", { x: tipX, y: top - 12, "text-anchor": "middle", fill: "var(--fail)", "font-size": 11, "font-family": mono }, "tipped");
+  let y = top;
+  groups.forEach(([surface, sets], gi) => {
+    if (gi > 0) { el("line", { x1: 0, x2: W, y1: y + gap / 2 - 1, y2: y + gap / 2 - 1, stroke: "var(--line)" }); y += gap; }
+    sets.forEach(([build, runs, note], si) => {
+      const cy = y + laneH / 2;
+      if (si === 0) el("text", { x: nameX, y: cy + 4, fill: "var(--ink)", "font-size": 12.5, "font-weight": 600, "font-family": sans }, surface);
+      el("text", { x: tagX, y: cy + 4, fill: color[build], "font-size": 11, "font-family": mono }, `${build}${note ? " · " + note : ""}`);
+      runs.forEach((v, k) => {
+        if (v === null) {
+          const cx = tipX + (k - 1) * 10;
+          el("path", { d: `M${cx - 4} ${cy - 4}l8 8M${cx + 4} ${cy - 4}l-8 8`, stroke: "var(--fail)", "stroke-width": 2, fill: "none" });
+          return;
+        }
+        el("circle", v <= 10
+          ? { cx: x(v), cy, r: 5.5, fill: color[build] }
+          : { cx: x(v), cy, r: 5, fill: "var(--surface)", stroke: color[build], "stroke-width": 2 });
+      });
+      y += laneH;
+    });
+  });
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+<script>
+// CAD stage: STL groups exported from the team's STEP files (mm, Z up). Three phases of a delivery.
+(function cadStage() {
+  const stage = document.getElementById("stage");
+  const status = document.getElementById("status");
+  const phaseLabel = document.getElementById("phase");
+  const buttons = [...document.querySelectorAll(".controls button")];
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fallback = () => {
+    status.remove();
+    const f = document.createElement("div");
+    f.className = "fallback";
+    f.innerHTML = '<img src="cutouts/hook-holding.webp" alt="Hook release holding the loop"><img src="cutouts/spring-legs.webp" alt="Spring-leg prototype">';
+    stage.appendChild(f);
+  };
+  if (!window.THREE || !THREE.STLLoader || !THREE.OrbitControls) { fallback(); return; }
+
+  const canvas = document.getElementById("cad");
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { fallback(); return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 5, 5000);
+  camera.up.set(0, 0, 1);
+  camera.position.set(720, -900, 600);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.target.set(0, 0, 195);
+  controls.enableDamping = true;
+  controls.autoRotate = !reduced;
+  controls.autoRotateSpeed = 0.8;
+  controls.minDistance = 250;
+  controls.maxDistance = 1600;
+  controls.addEventListener("start", () => { controls.autoRotate = false; });
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a96a3, 0.85));
+  const key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(300, -400, 700); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.35); rim.position.set(-500, 400, 200); scene.add(rim);
+
+  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const mats = {
+    capsule: new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.05 }),
+    legs: new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.15 }),
+    feet: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
+    hook: new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.05 }),
+    carrier: new THREE.MeshStandardMaterial({ roughness: 0.6, transparent: true, opacity: 0.55 }),
+  };
+  let grid;
+  function paint() {
+    mats.capsule.color.set(css("--muted"));
+    mats.legs.color.set(css("--steel"));
+    mats.feet.color.set(css("--ink"));
+    mats.hook.color.set(css("--accent"));
+    mats.carrier.color.set(css("--muted"));
+    if (grid) scene.remove(grid);
+    grid = new THREE.GridHelper(900, 18, new THREE.Color(css("--line")), new THREE.Color(css("--line")));
+    grid.rotation.x = Math.PI / 2;
+    grid.position.z = groundZ;
+    scene.add(grid);
+  }
+
+  const files = {
+    capsule: "landed-capsule", post: "landed-post",
+    landedLegs: "landed-legs", landedFeet: "landed-feet", stowedLegs: "stowed-legs", stowedFeet: "stowed-feet",
+    hook: "hook", swivel: "swivel", loop: "loop", carrier: "hook-carrier",
+  };
+  const matFor = { capsule: "capsule", post: "capsule", landedLegs: "legs", stowedLegs: "legs", landedFeet: "feet", stowedFeet: "feet",
+    hook: "hook", swivel: "hook", loop: "hook", carrier: "carrier" };
+  const loader = new THREE.STLLoader();
+  // Models ship as JSON holding base64 binary STL (the host serves .json, not .stl).
+  const load = name => fetch(`models/${files[name]}.json`)
+    .then(r => { if (!r.ok) throw new Error(`model ${name}: ${r.status}`); return r.json(); })
+    .then(j => {
+      const bin = atob(j.stl_base64), buf = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+      const g = loader.parse(buf.buffer);
+      g.computeVertexNormals();
+      return [name, g];
+    });
+
+  const PIVOT = new THREE.Vector3(1, 0, 211.7);  // hook pin on the swivel
+  const lift = new THREE.Group();                 // carrier, swivel and hook go back up together
+  const hookPivot = new THREE.Group();
+  hookPivot.position.copy(PIVOT);
+  lift.add(hookPivot);
+  scene.add(lift);
+  const meshes = {};
+  let groundZ = -60;
+  let phase = "lower";
+  const anim = { from: 0, to: 0, t: 1, liftFrom: 0, liftTo: 0, hookFrom: 0, hookTo: 0 };
+
+  Promise.all(Object.keys(files).map(load)).then(parts => {
+    for (const [name, geom] of parts) {
+      const m = new THREE.Mesh(geom, mats[matFor[name]]);
+      meshes[name] = m;
+      if (name === "hook") { m.position.sub(PIVOT); hookPivot.add(m); }
+      else if (name === "swivel" || name === "carrier") lift.add(m);
+      else scene.add(m);
+    }
+    meshes.landedFeet.geometry.computeBoundingBox();
+    groundZ = meshes.landedFeet.geometry.boundingBox.min.z;
+    paint();
+    status.remove();
+    setPhase("lower", true);
+    resize();
+    renderer.setAnimationLoop(tick);
+  }).catch(fallback);
+
+  // Lowering: legs folded, package hangs. Touchdown: legs out, feet on the ground. Release: hook swings open, carrier rises.
+  const LOWER_HEIGHT = 140, RISE = 160, HOOK_OPEN = -0.7;
+  function targets(p) {
+    if (p === "lower") return { body: LOWER_HEIGHT, lift: 0, hook: 0, landed: false };
+    if (p === "land") return { body: 0, lift: 0, hook: 0, landed: true };
+    return { body: 0, lift: RISE, hook: HOOK_OPEN, landed: true };
+  }
+  const bodyParts = () => [meshes.capsule, meshes.post, meshes.loop, meshes.landedLegs, meshes.landedFeet, meshes.stowedLegs, meshes.stowedFeet];
+  let bodyZ = LOWER_HEIGHT, liftZ = 0, hookA = 0;
+  function apply() {
+    bodyParts().forEach(m => { m.position.z = bodyZ; });
+    lift.position.z = bodyZ + liftZ;
+    hookPivot.rotation.y = hookA;
+  }
+  function setPhase(p, instant) {
+    phase = p;
+    buttons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.phase === p)));
+    phaseLabel.textContent = { lower: "Lowering", land: "Touchdown", release: "Released" }[p];
+    const tg = targets(p);
+    meshes.landedLegs.visible = meshes.landedFeet.visible = tg.landed;
+    meshes.stowedLegs.visible = meshes.stowedFeet.visible = !tg.landed;
+    Object.assign(anim, { t: instant || reduced ? 1 : 0, bodyFrom: bodyZ, bodyTo: tg.body, liftFrom: liftZ, liftTo: tg.lift, hookFrom: hookA, hookTo: tg.hook });
+    if (anim.t === 1) { bodyZ = tg.body; liftZ = tg.lift; hookA = tg.hook; apply(); }
+  }
+  buttons.forEach(b => b.addEventListener("click", () => { if (meshes.capsule) setPhase(b.dataset.phase); }));
+
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  let last = performance.now();
+  function tick(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    if (anim.t < 1) {
+      anim.t = Math.min(1, anim.t + dt / 1.4);
+      const e = ease(anim.t);
+      bodyZ = anim.bodyFrom + (anim.bodyTo - anim.bodyFrom) * Math.min(1, e * 1.4);
+      const late = Math.max(0, (anim.t - 0.25) / 0.75);
+      hookA = anim.hookFrom + (anim.hookTo - anim.hookFrom) * ease(Math.min(1, anim.t * 2));
+      liftZ = anim.liftFrom + (anim.liftTo - anim.liftFrom) * ease(late);
+      apply();
+    }
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener("resize", resize);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => meshes.capsule && paint());
+  new MutationObserver(() => meshes.capsule && paint()).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>
+
+</body>
+</html>
