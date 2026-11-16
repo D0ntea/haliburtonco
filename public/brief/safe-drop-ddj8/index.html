@@ -224,10 +224,6 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
 }
 /* feedback */
 .ask { scroll-margin-top: 16px; }
-.role-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-.role-tabs button { font: 500 var(--step--1)/1 var(--mono); letter-spacing: 0.05em; text-transform: uppercase; padding: 10px 14px; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
-.role-tabs button[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 .questions { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: q; }
 .questions li { counter-increment: q; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
 .questions li::before { content: counter(q, decimal-leading-zero); font-family: var(--mono); color: var(--accent); grid-row: span 4; }
@@ -340,14 +336,9 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
 
   <section aria-labelledby="ask-h" class="ask" id="feedback">
     <div class="sec-head">
-      <p class="label">Your read · about 5 minutes</p>
+      <p class="label">Five questions · about 5 minutes</p>
       <h2 id="ask-h">What we'd like from you</h2>
       <p class="muted">Tap the answer closest to your view and add a line if you want. Then copy your answers and paste them into your reply. Nothing is sent from this page.</p>
-    </div>
-    <div class="role-tabs" role="tablist" aria-label="Choose your perspective">
-      <button type="button" role="tab" id="tab-buyer" data-role="buyer" aria-selected="true">Program and buying</button>
-      <button type="button" role="tab" id="tab-operator" data-role="operator" aria-selected="false">First response</button>
-      <button type="button" role="tab" id="tab-controls" data-role="controls" aria-selected="false">Controls engineering</button>
     </div>
     <ol class="questions" id="questions"></ol>
     <div class="copy-row">
@@ -451,7 +442,6 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
 
 <script>
 // Feedback: quick picks plus an optional line per question, copied as plain text into the reader's reply.
-// One page serves all three interviewees; the link's #buyer, #operator or #controls opens their set.
 (function feedback() {
   const SETS = {
     buyer: [
@@ -466,36 +456,12 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
       { q: "Should the package report back that it landed upright and let go, even though a sensor adds weight and cost?",
         why: "Right now we confirm it by eye.", picks: ["Worth the weight", "A camera on the drone is enough", "Not needed"] },
     ],
-    operator: [
-      { q: "Flat ground passed every run. Ramps of 20° or more passed 2 of 9. How steep is the ground your team most often can't drop on?",
-        why: "This sets our slope requirement.", picks: ["Under 15°", "15 to 30°", "Steeper than 30°"] },
-      { q: "What would you lower first, and roughly how heavy is it?",
-        why: "We tested up to 2.2 kg at half scale; the full design targets 5 kg.", picks: ["AED, about 2 kg", "Narcan or meds, under 0.5 kg", "Water, blanket or radio"] },
-      { q: "Our winch math gives 40 seconds to 3.5 minutes to lower 30 m, depending on the gearbox. How long can your drone hold a hover for a delivery?",
-        why: "This drives winch speed and battery.", picks: ["Under 1 minute", "1 to 3 minutes", "Over 3 minutes"] },
-      { q: "When the package lands on a slope, does it matter if it sits a little tilted, as long as it doesn't tip over?",
-        why: "Our limit today is 10° from level.", picks: ["10° is fine", "Tilt doesn't matter, tipping does", "Must be level"] },
-      { q: "Would your pilots need to see that the package let go, or is it enough that the line comes back up empty?",
-        why: "Our release is passive and has no signal.", picks: ["Empty line is enough", "Need a signal", "Need video"] },
-    ],
-    controls: [
-      { q: "Hanging from one line, the package tilts to match a slope before its legs can adjust. How would you keep it level through touchdown?",
-        why: "Our thrusters are planned but not built.", picks: ["Thrusters", "Slow the last half meter", "Rigid link to the drone"] },
-      { q: "The passive hook opens early if the package drops suddenly or stops hard. What limit would you put on the winch?",
-        why: "Rubber bands set the opening force today.", picks: ["Cap deceleration", "Cap lowering speed", "Lock it until touchdown"] },
-      { q: "In September you suggested simulating first. What would you simulate before the next build?",
-        why: "We have tilt data from 36 runs.", picks: ["Pendulum swing while lowering", "Touchdown on a slope", "Drone response at release"] },
-      { q: "Which measurement matters most in the next round of tests?",
-        why: "We logged tilt only.", picks: ["Peak g at contact", "Swing angle while lowering", "Line tension"] },
-    ],
   };
-  const LABELS = { buyer: "Program and buying", operator: "First response", controls: "Controls engineering" };
   const KEY = "safe-drop-feedback";
   const list = document.getElementById("questions");
   const out = document.getElementById("answers-text");
   const status = document.getElementById("copy-status");
-  const tabs = [...document.querySelectorAll(".role-tabs button")];
-  let role = "buyer";
+  const role = "buyer";
   let answers = {};
   try { answers = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { answers = {}; }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(answers)); } catch (e) { /* storage blocked: answers stay on the page */ } };
@@ -507,7 +473,7 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
 
   function write() {
     const mine = answers[role] || {};
-    const lines = [`Safe-Drop feedback (${LABELS[role]})`, ""];
+    const lines = ["Safe-Drop feedback", ""];
     SETS[role].forEach((item, i) => {
       const a = mine[i] || {};
       lines.push(`${i + 1}. ${item.q}`);
@@ -517,7 +483,6 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
   }
 
   function render() {
-    tabs.forEach(t => t.setAttribute("aria-selected", String(t.dataset.role === role)));
     const mine = answers[role] || {};
     list.replaceChildren(...SETS[role].map((item, i) => {
       const li = document.createElement("li");
@@ -542,21 +507,13 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
     write();
   }
 
-  function fromHash() {
-    const h = location.hash.slice(1);
-    if (SETS[h]) { role = h; render(); }
-  }
-  // the hash only picks the tab; the reader starts at the top with the CAD
-  tabs.forEach(t => t.addEventListener("click", () => { role = t.dataset.role; status.textContent = ""; render(); }));
   document.getElementById("copy-answers").addEventListener("click", () => {
     write();
     const manual = () => { out.focus(); out.select(); status.textContent = "Selected. Press Ctrl+C or Cmd+C to copy."; };
     if (!navigator.clipboard?.writeText) { manual(); return; }
     navigator.clipboard.writeText(out.value).then(() => { status.textContent = "Copied. Paste it into your reply."; }, manual);
   });
-  window.addEventListener("hashchange", fromHash);
   render();
-  fromHash();
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
