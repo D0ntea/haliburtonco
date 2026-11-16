@@ -234,7 +234,10 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
 .choices button:hover { border-color: var(--accent); }
 .choices button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 500; }
 .questions input { width: 100%; font: inherit; font-size: var(--step--1); padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); }
-.copy-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-block: 18px 10px; }
+.send-row { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-block: 18px 10px; }
+.send-row .label { flex-basis: 100%; }
+.send-row input { flex: 1 1 220px; max-width: 320px; font: inherit; padding: 12px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); }
+.copy-btn:disabled { opacity: 0.7; cursor: default; }
 .copy-btn { font: 600 var(--step--1)/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; padding: 14px 20px; border-radius: 999px; border: 0; background: var(--accent); color: #fff; cursor: pointer; }
 #answers-text { width: 100%; margin-top: 6px; font: var(--step--1)/1.5 var(--mono); padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink); resize: vertical; }
 /* team */
@@ -336,17 +339,21 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
 
   <section aria-labelledby="ask-h" class="ask" id="feedback">
     <div class="sec-head">
-      <p class="label">Four questions · about 5 minutes</p>
+      <p class="label">Four questions · about 2 minutes</p>
       <h2 id="ask-h">What we'd like from you</h2>
-      <p class="muted">Tap the answer closest to your view and add a line if you want. Then copy your answers and paste them into your reply. Nothing is sent from this page.</p>
+      <p class="muted">Tap the answer closest to your view, add a line if you want, and press Send. Your answers go straight to Dontea.</p>
     </div>
     <ol class="questions" id="questions"></ol>
-    <div class="copy-row">
-      <button type="button" id="copy-answers" class="copy-btn">Copy my answers</button>
-      <span id="copy-status" class="muted" role="status"></span>
+    <div class="send-row">
+      <label for="sender-name" class="label">Your name</label>
+      <input type="text" id="sender-name" autocomplete="name" placeholder="Optional">
+      <button type="button" id="send-answers" class="copy-btn">Send my answers</button>
+      <span id="copy-status" class="muted" role="status" aria-live="polite"></span>
     </div>
-    <label for="answers-text" class="label">Your answers, ready to paste</label>
-    <textarea id="answers-text" readonly rows="6"></textarea>
+    <div id="fallback" hidden>
+      <label for="answers-text" class="label">Sending didn't work. Copy this and paste it into your reply instead.</label>
+      <textarea id="answers-text" readonly rows="6"></textarea>
+    </div>
   </section>
 
   <section aria-labelledby="vid-h" class="videos-sec">
@@ -505,11 +512,37 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
     write();
   }
 
-  document.getElementById("copy-answers").addEventListener("click", () => {
+  // Answers post to Dontea's Google Form (his account emails him each response). The form answers cross-origin
+  // without CORS headers, so the response is opaque: a resolved fetch counts as sent, a rejected one shows the
+  // copy fallback.
+  const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSeN55Dn6IU-tFcK1v45e2dFjYckKaJB4cIB4W84nH5OIAlXUg/formResponse";
+  const ENTRY = ["entry.2126802215", "entry.1446055405", "entry.296018843", "entry.154427775"];
+  const NAME_ENTRY = "entry.439450949";
+  const sendBtn = document.getElementById("send-answers");
+  const nameField = document.getElementById("sender-name");
+  sendBtn.addEventListener("click", () => {
+    const mine = answers[role] || {};
+    const filled = SETS[role].filter((_, i) => mine[i]?.pick || mine[i]?.note).length;
+    if (filled === 0) { status.textContent = "Pick at least one answer first."; return; }
+    const body = new URLSearchParams();
+    SETS[role].forEach((_, i) => {
+      const a = mine[i] || {};
+      body.append(ENTRY[i], [a.pick, a.note].filter(Boolean).join(". ") || "(skipped)");
+    });
+    body.append(NAME_ENTRY, nameField.value.trim().slice(0, 120));
     write();
-    const manual = () => { out.focus(); out.select(); status.textContent = "Selected. Press Ctrl+C or Cmd+C to copy."; };
-    if (!navigator.clipboard?.writeText) { manual(); return; }
-    navigator.clipboard.writeText(out.value).then(() => { status.textContent = "Copied. Paste it into your reply."; }, manual);
+    sendBtn.disabled = true;
+    status.textContent = "Sending…";
+    fetch(FORM, { method: "POST", mode: "no-cors", body })
+      .then(() => {
+        sendBtn.textContent = "Sent";
+        status.textContent = "Thank you. Your answers went to Dontea.";
+      })
+      .catch(() => {
+        sendBtn.disabled = false;
+        status.textContent = "";
+        document.getElementById("fallback").hidden = false;
+      });
   });
   render();
 })();
