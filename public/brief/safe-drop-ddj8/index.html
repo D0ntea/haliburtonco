@@ -222,6 +222,30 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
   .status-strip { grid-template-columns: minmax(0, 1fr); }
   .status-strip > div { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); }
 }
+/* feedback */
+.ask { scroll-margin-top: 16px; }
+.role-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.role-tabs button { font: 500 var(--step--1)/1 var(--mono); letter-spacing: 0.05em; text-transform: uppercase; padding: 10px 14px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.role-tabs button[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.questions { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: q; }
+.questions li { counter-increment: q; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.questions li::before { content: counter(q, decimal-leading-zero); font-family: var(--mono); color: var(--accent); grid-row: span 4; }
+.questions .q { font-weight: 600; }
+.questions .why { color: var(--muted); font-size: var(--step--1); }
+.choices { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.choices button { font: 400 var(--step--1)/1.2 var(--body); padding: 8px 12px; border-radius: 4px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.choices button:hover { border-color: var(--accent); }
+.choices button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 500; }
+.questions input { width: 100%; font: inherit; font-size: var(--step--1); padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); }
+.copy-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-block: 18px 10px; }
+.copy-btn { font: 600 var(--step--1)/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; padding: 14px 20px; border-radius: 999px; border: 0; background: var(--accent); color: #fff; cursor: pointer; }
+#answers-text { width: 100%; margin-top: 6px; font: var(--step--1)/1.5 var(--mono); padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink); resize: vertical; }
+/* team */
+.team { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); border-top: 1px solid var(--line); }
+.team li { display: grid; gap: 2px; padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); }
+.team strong { font-family: var(--display); font-size: var(--step-1); text-transform: uppercase; letter-spacing: 0.02em; }
+.team span { color: var(--muted); font-size: var(--step--1); }
 </style>
 </head>
 <body>
@@ -238,7 +262,7 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
       <p class="label">Precision aerial delivery</p>
       <h1>The last <span>30 meters</span> are the hard part</h1>
       <p class="lede">Safe-Drop lowers a package on a line onto steep, rough or soft ground, so the drone never has to land.</p>
-      <p class="note">You helped us define this problem in September. Here is what we built and tested since, and where it falls short.</p>
+      <p class="note">You helped us define this problem in September. Here is what we built and tested since, and where it falls short. <a href="#feedback">Jump to our questions for you</a>.</p>
     </div>
     <div>
       <div class="stage" id="stage">
@@ -314,6 +338,26 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
     </div>
   </section>
 
+  <section aria-labelledby="ask-h" class="ask" id="feedback">
+    <div class="sec-head">
+      <p class="label">Your read · about 5 minutes</p>
+      <h2 id="ask-h">What we'd like from you</h2>
+      <p class="muted">Tap the answer closest to your view and add a line if you want. Then copy your answers and paste them into your reply. Nothing is sent from this page.</p>
+    </div>
+    <div class="role-tabs" role="tablist" aria-label="Choose your perspective">
+      <button type="button" role="tab" id="tab-buyer" data-role="buyer" aria-selected="true">Program and buying</button>
+      <button type="button" role="tab" id="tab-operator" data-role="operator" aria-selected="false">First response</button>
+      <button type="button" role="tab" id="tab-controls" data-role="controls" aria-selected="false">Controls engineering</button>
+    </div>
+    <ol class="questions" id="questions"></ol>
+    <div class="copy-row">
+      <button type="button" id="copy-answers" class="copy-btn">Copy my answers</button>
+      <span id="copy-status" class="muted" role="status"></span>
+    </div>
+    <label for="answers-text" class="label">Your answers, ready to paste</label>
+    <textarea id="answers-text" readonly rows="6"></textarea>
+  </section>
+
   <section aria-labelledby="vid-h" class="videos-sec">
     <h2 id="vid-h" class="label">Watch the runs</h2>
     <div class="videos">
@@ -322,8 +366,26 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
     </div>
   </section>
 
-  <footer>
+  <section aria-labelledby="team-h">
+    <div class="sec-head">
+      <p class="label">MEE 488 Capstone · Arizona State University</p>
+      <h2 id="team-h">Magnificent 8 · Team 9</h2>
+    </div>
+    <ul class="team">
+      <li><strong>Hayden Wachs</strong><span>Team coordination, spring-latch release</span></li>
+      <li><strong>Toby Becker</strong><span>Spring-latch release CAD</span></li>
+      <li><strong>Jason Del Aguila</strong><span>Passive hook CAD, ratcheting legs, 24 integrated runs</span></li>
+      <li><strong>Chandler Brignac</strong><span>Passive hook concept and cardboard prototypes</span></li>
+      <li><strong>Dontea Haliburton</strong><span>Spring-leg capsule, 12 instrumented runs, CAD integration</span></li>
+      <li><strong>Jordan Strickland</strong><span>Servo bolt release concept, test video</span></li>
+      <li><strong>Davinder Singh</strong><span>Weight-held release concept, drone attachment CAD</span></li>
+    </ul>
+  </section>
 
+  <footer>
+    <span>Safe-Drop · MEE 488 Team 9 · Arizona State University</span>
+    <span>Half-scale prototype · November 2026</span>
+  </footer>
 </div>
 
 <script>
@@ -387,6 +449,116 @@ footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
 })();
 </script>
 
+<script>
+// Feedback: quick picks plus an optional line per question, copied as plain text into the reader's reply.
+// One page serves all three interviewees; the link's #buyer, #operator or #controls opens their set.
+(function feedback() {
+  const SETS = {
+    buyer: [
+      { q: "We're carrying forward a passive release: the package's weight holds a hook shut and a spring opens it at touchdown, with no electronics. Which earns more trust with a buyer?",
+        why: "You told us trust comes from removing failure modes.", picks: ["Passive, fewer parts", "Powered, if it confirms release", "Depends on the mission"] },
+      { q: "Flat ground passed every run. Ramps of 20° or more passed 2 of 9. Is a system rated to about 15° still worth buying if the operator picks flatter ground inside the drop zone?",
+        why: "Our September requirement says 0 to 30°.", picks: ["Yes, 15° is enough", "Needs about 30°", "Steep ground is the whole point"] },
+      { q: "We set at least 90% success at every test condition. What would a program office want to see before paying for a field trial?",
+        why: "Add the number of trials if you have one in mind.", picks: ["90% is enough", "95% or better", "99% or better"] },
+      { q: "The drone stays at least 0.5 m off the ground and only the package touches down. Which is the bigger selling point?",
+        why: "You said a bad landing costs about a week of vehicle availability.", picks: ["Protecting the drone", "Protecting the payload", "Both equally"] },
+      { q: "Should the package report back that it landed upright and let go, even though a sensor adds weight and cost?",
+        why: "Right now we confirm it by eye.", picks: ["Worth the weight", "A camera on the drone is enough", "Not needed"] },
+    ],
+    operator: [
+      { q: "Flat ground passed every run. Ramps of 20° or more passed 2 of 9. How steep is the ground your team most often can't drop on?",
+        why: "This sets our slope requirement.", picks: ["Under 15°", "15 to 30°", "Steeper than 30°"] },
+      { q: "What would you lower first, and roughly how heavy is it?",
+        why: "We tested up to 2.2 kg at half scale; the full design targets 5 kg.", picks: ["AED, about 2 kg", "Narcan or meds, under 0.5 kg", "Water, blanket or radio"] },
+      { q: "Our winch math gives 40 seconds to 3.5 minutes to lower 30 m, depending on the gearbox. How long can your drone hold a hover for a delivery?",
+        why: "This drives winch speed and battery.", picks: ["Under 1 minute", "1 to 3 minutes", "Over 3 minutes"] },
+      { q: "When the package lands on a slope, does it matter if it sits a little tilted, as long as it doesn't tip over?",
+        why: "Our limit today is 10° from level.", picks: ["10° is fine", "Tilt doesn't matter, tipping does", "Must be level"] },
+      { q: "Would your pilots need to see that the package let go, or is it enough that the line comes back up empty?",
+        why: "Our release is passive and has no signal.", picks: ["Empty line is enough", "Need a signal", "Need video"] },
+    ],
+    controls: [
+      { q: "Hanging from one line, the package tilts to match a slope before its legs can adjust. How would you keep it level through touchdown?",
+        why: "Our thrusters are planned but not built.", picks: ["Thrusters", "Slow the last half meter", "Rigid link to the drone"] },
+      { q: "The passive hook opens early if the package drops suddenly or stops hard. What limit would you put on the winch?",
+        why: "Rubber bands set the opening force today.", picks: ["Cap deceleration", "Cap lowering speed", "Lock it until touchdown"] },
+      { q: "In September you suggested simulating first. What would you simulate before the next build?",
+        why: "We have tilt data from 36 runs.", picks: ["Pendulum swing while lowering", "Touchdown on a slope", "Drone response at release"] },
+      { q: "Which measurement matters most in the next round of tests?",
+        why: "We logged tilt only.", picks: ["Peak g at contact", "Swing angle while lowering", "Line tension"] },
+    ],
+  };
+  const LABELS = { buyer: "Program and buying", operator: "First response", controls: "Controls engineering" };
+  const KEY = "safe-drop-feedback";
+  const list = document.getElementById("questions");
+  const out = document.getElementById("answers-text");
+  const status = document.getElementById("copy-status");
+  const tabs = [...document.querySelectorAll(".role-tabs button")];
+  let role = "buyer";
+  let answers = {};
+  try { answers = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { answers = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(answers)); } catch (e) { /* storage blocked: answers stay on the page */ } };
+  const update = (i, change) => {
+    const mine = answers[role] || {};
+    answers = { ...answers, [role]: { ...mine, [i]: { ...(mine[i] || {}), ...change } } };
+    save();
+  };
+
+  function write() {
+    const mine = answers[role] || {};
+    const lines = [`Safe-Drop feedback (${LABELS[role]})`, ""];
+    SETS[role].forEach((item, i) => {
+      const a = mine[i] || {};
+      lines.push(`${i + 1}. ${item.q}`);
+      lines.push(`   Answer: ${[a.pick, a.note].filter(Boolean).join(". ") || "(skipped)"}`, "");
+    });
+    out.value = lines.join("\n").trim();
+  }
+
+  function render() {
+    tabs.forEach(t => t.setAttribute("aria-selected", String(t.dataset.role === role)));
+    const mine = answers[role] || {};
+    list.replaceChildren(...SETS[role].map((item, i) => {
+      const li = document.createElement("li");
+      const q = document.createElement("p"); q.className = "q"; q.textContent = item.q;
+      const why = document.createElement("p"); why.className = "why"; why.textContent = item.why;
+      const picks = document.createElement("div");
+      picks.className = "choices"; picks.setAttribute("role", "group"); picks.setAttribute("aria-label", `Question ${i + 1} answers`);
+      item.picks.forEach(label => {
+        const b = document.createElement("button");
+        b.type = "button"; b.textContent = label;
+        b.setAttribute("aria-pressed", String(mine[i]?.pick === label));
+        b.addEventListener("click", () => { update(i, { pick: mine[i]?.pick === label ? "" : label }); render(); });
+        picks.appendChild(b);
+      });
+      const note = document.createElement("input");
+      note.type = "text"; note.id = `note-${role}-${i}`; note.placeholder = "Add a line (optional)";
+      note.setAttribute("aria-label", `Question ${i + 1} comment`); note.value = mine[i]?.note || "";
+      note.addEventListener("input", () => { update(i, { note: note.value }); write(); });
+      li.append(q, why, picks, note);
+      return li;
+    }));
+    write();
+  }
+
+  function fromHash() {
+    const h = location.hash.slice(1);
+    if (SETS[h]) { role = h; render(); }
+  }
+  // the hash only picks the tab; the reader starts at the top with the CAD
+  tabs.forEach(t => t.addEventListener("click", () => { role = t.dataset.role; status.textContent = ""; render(); }));
+  document.getElementById("copy-answers").addEventListener("click", () => {
+    write();
+    const manual = () => { out.focus(); out.select(); status.textContent = "Selected. Press Ctrl+C or Cmd+C to copy."; };
+    if (!navigator.clipboard?.writeText) { manual(); return; }
+    navigator.clipboard.writeText(out.value).then(() => { status.textContent = "Copied. Paste it into your reply."; }, manual);
+  });
+  window.addEventListener("hashchange", fromHash);
+  render();
+  fromHash();
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
