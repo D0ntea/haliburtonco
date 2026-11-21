@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Seat Ring Landing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one tall CAD stage with its controls under it, then the results grid and the reasoning. Same look as the Yourri page. */
+:root {
+  --bg: #f1f3f5; --surface: #ffffff; --stage: #e3e8ec; --ink: #121a22; --muted: #56626e; --line: #d3d9df;
+  --accent: #d9530a; --accent-soft: #fbe7da; --steel: #2f6488; --steel-soft: #e1ebf2;
+  --seat: #6a4fd1; --seat-soft: #ebe6fb; --pass: #2e8a57; --pass-soft: rgba(46, 138, 87, 0.12); --fail: #c03a31;
+  --fail-soft: rgba(192, 58, 49, 0.1);
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --step-0: clamp(0.95rem, 0.9rem + 0.2vw, 1.05rem); --step-1: clamp(1.2rem, 1.05rem + 0.6vw, 1.5rem);
+  --step-2: clamp(1.6rem, 1.3rem + 1.2vw, 2.3rem); --step-3: clamp(2.2rem, 1.6rem + 2.6vw, 3.6rem);
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1217; --surface: #141c23; --stage: #10181f; --ink: #e6ecf1; --muted: #93a1ae; --line: #25313b;
+    --accent: #ff7a33; --accent-soft: #3a2116; --steel: #7fb2d6; --steel-soft: #182a37;
+    --seat: #a897ff; --seat-soft: #231d3d; --pass: #5cc48f; --pass-soft: rgba(92, 196, 143, 0.12); --fail: #f06a5f;
+    --fail-soft: rgba(240, 106, 95, 0.12); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1217; --surface: #141c23; --stage: #10181f; --ink: #e6ecf1; --muted: #93a1ae; --line: #25313b;
+  --accent: #ff7a33; --accent-soft: #3a2116; --steel: #7fb2d6; --steel-soft: #182a37;
+  --seat: #a897ff; --seat-soft: #231d3d; --pass: #5cc48f; --pass-soft: rgba(92, 196, 143, 0.12); --fail: #f06a5f;
+  --fail-soft: rgba(240, 106, 95, 0.12); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: var(--step-0); line-height: 1.6; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 36px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1.05; text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
+h1 { font-size: var(--step-3); text-transform: uppercase; }
+h2 { font-size: var(--step-2); text-transform: uppercase; }
+h3 { font-size: var(--step-1); }
+p { margin: 0; max-width: 68ch; }
+.label { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+header { display: grid; gap: 12px; }
+.lede { color: var(--muted); font-size: var(--step-1); line-height: 1.4; font-weight: 400; max-width: 60ch; }
+
+.viewer { display: grid; gap: 14px; }
+.stage { position: relative; height: clamp(380px, 62vh, 620px); background: var(--stage); border-radius: var(--radius);
+  overflow: hidden; border: 1px solid var(--line); }
+#cad { width: 100%; height: 100%; display: block; touch-action: none; }
+.status { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-family: var(--mono); }
+.hud { position: absolute; left: 14px; top: 12px; right: 14px; display: flex; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap; pointer-events: none; }
+.hud .phase { font-family: var(--display); font-size: var(--step-1); text-transform: uppercase; font-weight: 700; }
+.hud .speed { font-family: var(--mono); font-size: 0.74rem; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+.gauge { position: absolute; left: 14px; bottom: 12px; display: grid; gap: 4px; min-width: 210px; pointer-events: none;
+  background: color-mix(in srgb, var(--surface) 82%, transparent); padding: 10px 12px; border-radius: var(--radius); }
+.gauge .num { font-family: var(--display); font-size: 2.4rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.gauge .num small { font-size: 1rem; color: var(--muted); font-weight: 600; }
+.bar { position: relative; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.bar i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--pass); border-radius: 4px; }
+.bar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.group .label { margin-right: 4px; }
+button { font: 500 0.92rem var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 8px 12px; cursor: pointer; }
+button:hover { border-color: var(--steel); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+#play { background: var(--accent); color: #fff; border-color: var(--accent); min-width: 92px; }
+.scrub { flex: 1 1 260px; display: flex; gap: 10px; align-items: center; min-width: 0; }
+#scrub { flex: 1; min-width: 0; accent-color: var(--accent); }
+.spark { width: 100%; height: 92px; display: block; }
+
+.results { display: grid; gap: 14px; }
+.grid { display: grid; grid-template-columns: minmax(0, 2.2fr) repeat(2, minmax(0, 1fr)); border-top: 2px solid var(--ink); }
+.grid > div { padding: 12px 10px; border-bottom: 1px solid var(--line); min-width: 0; }
+.grid .head { font-family: var(--mono); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.grid .setup strong { display: block; }
+.grid .setup span { color: var(--muted); font-size: 0.9rem; }
+.chip { display: inline-flex; gap: 8px; align-items: baseline; font-family: var(--mono); font-size: 0.95rem; padding: 4px 10px;
+  border-radius: 999px; font-variant-numeric: tabular-nums; cursor: pointer; border: 1px solid transparent; background: none; }
+.chip.pass { background: var(--pass-soft); color: var(--pass); }
+.chip.fail { background: var(--fail-soft); color: var(--fail); }
+.chip[aria-pressed="true"] { border-color: currentColor; }
+
+.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px; }
+.why article { display: grid; gap: 8px; align-content: start; }
+.why .tag { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.tag.tested { color: var(--muted); } .tag.folded { color: var(--steel); } .tag.seated { color: var(--seat); }
+.eq { font-family: var(--mono); font-size: 0.9rem; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 10px 12px; }
+.limits { border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 0.92rem; display: grid; gap: 6px; }
+@media (max-width: 560px) { .grid { grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr)); } .gauge { min-width: 0; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+<main class="wrap">
+  <header>
+    <span class="label">MEE 488 · Team 9 · Safe-Drop · half scale</span>
+    <h1>How the capsule lands on a slope</h1>
+    <p class="lede">Three versions of the capsule lowered onto a 20° or 30° slope with one leg pointing straight uphill, the
+      worst heading. Every frame comes from the landing simulation, checked first against our 11/15 runs.</p>
+  </header>
+
+  <section class="viewer" aria-label="Landing animation">
+    <div class="stage" id="stage">
+      <canvas id="cad" aria-label="3D model of the capsule landing"></canvas>
+      <div class="hud" aria-hidden="true"><span class="phase" id="phase">Loading</span><span class="speed" id="speed"></span></div>
+      <div class="gauge" aria-live="polite">
+        <span class="label">Payload tilt</span>
+        <span class="num" id="tilt">0.0<small>°</small></span>
+        <div class="bar"><i id="tiltbar"></i><b id="limitmark"></b></div>
+        <span class="label" id="verdict">Limit 10° (R4)</span>
+      </div>
+      <p class="status" id="status">Loading the CAD models</p>
+    </div>
+    <div class="controls">
+      <div class="group" role="group" aria-label="Setup">
+        <span class="label">Setup</span>
+        <button type="button" id="s-tested" data-setup="tested" aria-pressed="false">As tested 11/15</button>
+        <button type="button" id="s-folded" data-setup="folded" aria-pressed="false">Legs folded up</button>
+        <button type="button" id="s-seated" data-setup="seated" aria-pressed="true">Folded up + seat ring</button>
+      </div>
+      <div class="group" role="group" aria-label="Slope">
+        <span class="label">Slope</span>
+        <button type="button" id="g-20" data-slope="20" aria-pressed="true">20°</button>
+        <button type="button" id="g-30" data-slope="30" aria-pressed="false">30°</button>
+      </div>
+      <div class="scrub">
+        <button type="button" id="play">Pause</button>
+        <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Timeline">
+      </div>
+    </div>
+    <svg class="spark" id="spark" viewBox="0 0 1000 92" preserveAspectRatio="none" aria-label="Payload tilt over time"></svg>
+  </section>
+
+  <section class="results">
+    <h2>Payload tilt after release</h2>
+    <p>Pick any cell to play that run. A run passes at 10° or less (requirement R4).</p>
+    <div class="grid" id="grid">
+      <div class="head">Setup</div><div class="head">20° slope</div><div class="head">30° slope</div>
+    </div>
+  </section>
+
+  <section class="why">
+    <article>
+      <span class="tag tested">As tested 11/15</span>
+      <h3>Legs stowed sideways</h3>
+      <p>Jason's ratchet legs and Jason and Chandler's passive hook, as built. Stowed legs stick out sideways, so on a slope the uphill foot
+        catches the ground before the legs drop. The capsule then rotates on the hook to match the slope.</p>
+    </article>
+    <article>
+      <span class="tag folded">Change 1</span>
+      <h3>Fold the legs up when stowed</h3>
+      <p>Same parts, but the legs stow folded up against the capsule. Nothing touches until the legs drop, so each
+        leg finds the ground and locks. This alone fixes 20°. At 30° the capsule still pivots on the hook.</p>
+    </article>
+    <article>
+      <span class="tag seated">Change 2</span>
+      <h3>Add the seat ring</h3>
+      <p>A collar on the crown post sits 1 mm under a lip ring on the carrier. When the first foot touches, the collar
+        hits the lip, so the package and carrier act as one piece and the fans can hold it level.</p>
+      <p class="eq">Loose hook: hook tension T = W − F (it unloads)<br>Seat ring: T = W + 1.8 F (it tightens)</p>
+      <p>The hook also cannot open while the package rests on one foot. It opens once the legs share the weight.</p>
+    </article>
+  </section>
+
+  <section class="limits" aria-label="Limits">
+    <span class="label">What this does not show</span>
+    <p>No wind, ideal fan control, and hard ground only. The soft-ground part of the model does not yet match our pillow
+      runs, so it is left out. Legs and the seat parts are simplified shapes on the real capsule, post, loop, hook,
+      swivel and carrier plate from the team CAD. The hook opening and carrier lift after release are drawn, not simulated.</p>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+<script>
+(function landing() {
+  const SETUPS = { tested: "As tested 11/15", folded: "Legs folded up", seated: "Folded up + seat ring" };
+  const NOTES = { tested: "legs stowed sideways, loose hook", folded: "legs folded up, loose hook", seated: "legs folded up, hook seated, fans on" };
+  const CENTER = 45, CATCH = 188, PIVOT = [1, 0, 211.7], PLATE_TOP = 299;   // mm, from the capsule bottom
+  const RELEASE_S = 2.0, HOOK_OPEN = -0.7, RISE = 160;
+  const stage = document.getElementById("stage"), status = document.getElementById("status");
+  const phaseEl = document.getElementById("phase"), speedEl = document.getElementById("speed");
+  const tiltEl = document.getElementById("tilt"), barEl = document.getElementById("tiltbar");
+  const verdictEl = document.getElementById("verdict"), playBtn = document.getElementById("play");
+  const scrub = document.getElementById("scrub"), spark = document.getElementById("spark");
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  let data = null, setup = "seated", slope = 20, run = null, simT = 0, playing = !reduced;
+
+  const fail = msg => { status.textContent = msg; status.hidden = false; };
+  if (!window.THREE || !THREE.STLLoader || !THREE.OrbitControls) { fail("The 3D viewer could not load. The results table below still applies."); }
+
+  // Results grid first, so the numbers are readable even without WebGL.
+  function buildGrid() {
+    const grid = document.getElementById("grid");
+    Object.keys(SETUPS).forEach(s => {
+      const cell = document.createElement("div");
+      cell.className = "setup";
+      cell.innerHTML = `<strong>${SETUPS[s]}</strong><span>${NOTES[s]}</span>`;
+      grid.appendChild(cell);
+      [20, 30].forEach(g => {
+        const r = data.runs[`${s}-${g}`];
+        const c = document.createElement("div");
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = `chip ${r.passed ? "pass" : "fail"}`;
+        b.dataset.setup = s; b.dataset.slope = g; b.id = `chip-${s}-${g}`;
+        b.innerHTML = `${r.final_tilt.toFixed(1)}° <span>${r.passed ? "pass" : "fail"}</span>`;
+        b.addEventListener("click", () => choose(s, g));
+        c.appendChild(b);
+        grid.appendChild(c);
+      });
+    });
+  }
+
+  function choose(s, g) {
+    setup = s; slope = g;
+    document.querySelectorAll("[data-setup]").forEach(b => {
+      const on = b.dataset.setup === s && (!b.dataset.slope || Number(b.dataset.slope) === g);
+      b.setAttribute("aria-pressed", String(b.classList.contains("chip") ? on : b.dataset.setup === s));
+    });
+    document.querySelectorAll(".group [data-slope]").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.slope) === g)));
+    run = data.runs[`${s}-${g}`];
+    run.end = run.frames[run.frames.length - 1][0];
+    simT = 0;
+    playing = !reduced;
+    playBtn.textContent = playing ? "Pause" : "Play";
+    if (reduced) simT = run.end + RELEASE_S;
+    drawSpark();
+    if (pkg) { setGround(); setSeat(); update(); }
+  }
+
+  // Tilt trace for the selected run, with the 10° limit.
+  function drawSpark() {
+    const NS = "http://www.w3.org/2000/svg";
+    spark.replaceChildren();
+    const total = run.end + RELEASE_S, max = Math.max(25, ...run.frames.map(f => f[13]));
+    const x = t => (t / total) * 1000, y = v => 86 - (v / max) * 78;
+    const add = (tag, attrs) => { const e = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); spark.appendChild(e); return e; };
+    add("line", { x1: 0, x2: 1000, y1: y(10), y2: y(10), stroke: css("--fail"), "stroke-dasharray": "6 6", "stroke-width": 1.2, "vector-effect": "non-scaling-stroke" });
+    add("text", { x: 4, y: y(10) - 4, fill: css("--fail"), "font-size": 11, "font-family": "IBM Plex Mono, monospace" }).textContent = "10° limit";
+    const pts = run.frames.map(f => `${x(f[0]).toFixed(1)},${y(f[13]).toFixed(1)}`);
+    pts.push(`${x(total).toFixed(1)},${y(run.frames[run.frames.length - 1][13]).toFixed(1)}`);
+    add("polyline", { points: pts.join(" "), fill: "none", stroke: css(setup === "seated" ? "--seat" : setup === "folded" ? "--steel" : "--muted"), "stroke-width": 2.2, "vector-effect": "non-scaling-stroke" });
+    spark._cursor = add("line", { x1: 0, x2: 0, y1: 0, y2: 92, stroke: css("--accent"), "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" });
+    spark._x = x;
+  }
+
+  // ---------- 3D ----------
+  let scene, camera, renderer, controls, pkg, stack, hookPivot, legs = [], ground, cord, collar, ring, fans = [];
+  const mats = {};
+  function material(key, opts) { mats[key] = new THREE.MeshStandardMaterial(Object.assign({ roughness: 0.6, metalness: 0.05 }, opts)); return mats[key]; }
+  function paint() {
+    mats.capsule.color.set(css("--muted")); mats.legs.color.set(css("--steel")); mats.feet.color.set(css("--ink"));
+    mats.hook.color.set(css("--accent")); mats.carrier.color.set(css("--muted")); mats.seat.color.set(css("--seat"));
+    mats.ground.color.set(css("--line")); mats.fan.color.set(css("--ink"));
+    if (cord) cord.material.color.set(css("--ink"));
+    if (run) drawSpark();
+  }
+
+  function init3d() {
+    const canvas = document.getElementById("cad");
+    try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { fail("This browser could not start 3D. The results table below still applies."); return false; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(30, 1, 5, 6000);
+    camera.up.set(0, 0, 1);
+    camera.position.set(300, -1450, 420);
+    controls = new THREE.OrbitControls(camera, canvas);
+    controls.target.set(0, 0, 170);
+    controls.enableDamping = true;
+    controls.minDistance = 300; controls.maxDistance = 2400;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x8a96a3, 0.85));
+    const key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(300, -500, 800); scene.add(key);
+    const rim = new THREE.DirectionalLight(0xffffff, 0.35); rim.position.set(-600, 400, 200); scene.add(rim);
+    ["capsule", "legs", "feet", "hook", "seat", "ground", "fan"].forEach(k => material(k, {}));
+    material("carrier", { transparent: true, opacity: 0.6 });
+    mats.ground.roughness = 0.95;
+    return true;
+  }
+
+  const loader = window.THREE && THREE.STLLoader ? new THREE.STLLoader() : null;
+  const loadMesh = name => fetch(`models/${name}.json`)
+    .then(r => { if (!r.ok) throw new Error(`${name}: ${r.status}`); return r.json(); })
+    .then(j => { const bin = atob(j.stl_base64), buf = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+      const g = loader.parse(buf.buffer); g.computeVertexNormals(); return [name, g]; });
+
+  function buildRig(geo) {
+    const mesh = (name, mat, dz) => { const m = new THREE.Mesh(geo[name], mats[mat]); m.position.z = dz; return m; };
+    pkg = new THREE.Group();
+    pkg.add(mesh("landed-capsule", "capsule", -CENTER), mesh("landed-post", "capsule", -CENTER), mesh("loop", "hook", -CENTER));
+    collar = mesh("seat-collar", "seat", -CENTER); pkg.add(collar);
+    const legGeo = new THREE.BoxGeometry(120, 9, 7); legGeo.translate(60, 0, 0);
+    const footGeo = new THREE.SphereGeometry(10, 18, 12); footGeo.translate(120, 0, 0);
+    for (let i = 0; i < 4; i++) {
+      const az = (Math.PI / 2) * i, base = new THREE.Group(), hinge = new THREE.Group();
+      base.position.set(100 * Math.cos(az), 100 * Math.sin(az), -CENTER);
+      base.rotation.z = az;
+      hinge.add(new THREE.Mesh(legGeo, mats.legs), new THREE.Mesh(footGeo, mats.feet));
+      base.add(hinge); pkg.add(base); legs.push(hinge);
+    }
+    scene.add(pkg);
+    stack = new THREE.Group();                        // origin at the hook catch on the loop bar
+    stack.add(mesh("hook-carrier", "carrier", -CATCH), mesh("swivel", "hook", -CATCH));
+    ring = mesh("seat-ring", "seat", -CATCH); stack.add(ring);
+    hookPivot = new THREE.Group();
+    hookPivot.position.set(PIVOT[0], PIVOT[1], PIVOT[2] - CATCH);
+    const hook = new THREE.Mesh(geo["hook"], mats.hook); hook.position.set(-PIVOT[0], -PIVOT[1], -PIVOT[2]);
+    hookPivot.add(hook); stack.add(hookPivot);
+    const fanGeo = new THREE.CylinderGeometry(16, 16, 22, 20, 1, true); fanGeo.rotateX(Math.PI / 2);
+    for (let k = 0; k < 6; k++) {
+      const a = (Math.PI / 3) * k + Math.PI / 6;
+      const f = new THREE.Mesh(fanGeo, mats.fan);
+      f.position.set(62 * Math.cos(a), 62 * Math.sin(a), PLATE_TOP - CATCH + 11);
+      stack.add(f); fans.push(f);
+    }
+    scene.add(stack);
+    const cg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    cord = new THREE.Line(cg, new THREE.LineBasicMaterial({ color: css("--ink") }));
+    scene.add(cord);
+  }
+
+  function setGround() {
+    if (ground) scene.remove(ground);
+    ground = new THREE.Group();
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(1500, 700, 14), mats.ground);
+    slab.position.z = -7;
+    ground.add(slab);
+    const lines = new THREE.Group();
+    const lineMat = new THREE.LineBasicMaterial({ color: new THREE.Color(css("--muted")), transparent: true, opacity: 0.35 });
+    for (let x = -700; x <= 700; x += 100) {
+      const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, -350, 0.5), new THREE.Vector3(x, 350, 0.5)]);
+      lines.add(new THREE.Line(g, lineMat));
+    }
+    ground.add(lines);
+    ground.rotation.y = THREE.MathUtils.degToRad(slope);
+    scene.add(ground);
+  }
+  function setSeat() { const on = setup === "seated"; collar.visible = ring.visible = on; fans.forEach(f => { f.visible = on; }); }
+
+  // ---------- playback ----------
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  function rate(t) {                                // slow motion through touchdown
+    const first = Math.min(run.events.contact ?? Infinity, run.events.deploy ?? Infinity);
+    return t > first - 0.35 && t < (run.events.slack ?? run.end) + 0.6 ? 0.22 : 1;
+  }
+  function sample(t) {
+    const F = run.frames;
+    if (t <= F[0][0]) return F[0];
+    if (t >= F[F.length - 1][0]) return F[F.length - 1];
+    let i = Math.min(F.length - 2, Math.floor((t / run.end) * (F.length - 1)));
+    while (i > 0 && F[i][0] > t) i--;
+    while (i < F.length - 2 && F[i + 1][0] < t) i++;
+    const a = F[i], b = F[i + 1], u = (t - a[0]) / Math.max(1e-6, b[0] - a[0]);
+    const out = a.map((v, k) => v + (b[k] - v) * u);
+    const qa = new THREE.Quaternion(a[5], a[6], a[7], a[4]), qb = new THREE.Quaternion(b[5], b[6], b[7], b[4]);
+    out.q = qa.slerp(qb, u);
+    out.fans = a[14];
+    return out;
+  }
+  function phaseName(t) {
+    const e = run.events;
+    if (t > run.end) return t - run.end < 0.5 ? "Hook opens" : "Carrier lifts away";
+    if (e.slack != null && t >= e.slack) return "Weight on the legs";
+    const touched = e.contact != null && t >= e.contact, dropped = e.deploy != null && t >= e.deploy;
+    if (touched && !dropped) return "Uphill side touches first";
+    if (touched) return "Touchdown";
+    if (dropped) return "Legs drop and lock";
+    return "Lowering, legs stowed";
+  }
+  function update() {
+    if (!run || !pkg) return;
+    const t = Math.min(simT, run.end), f = sample(t);
+    const q = f.q || new THREE.Quaternion(f[5], f[6], f[7], f[4]);
+    pkg.position.set(f[1], f[2], f[3]);
+    pkg.quaternion.copy(q);
+    const dz = (f[3] + 110) - controls.target.z;       // keep the capsule and hook stack framed as it lowers
+    controls.target.z += dz; camera.position.z += dz;
+    legs.forEach((h, i) => { h.rotation.y = f[8 + i]; });
+    const rel = Math.max(0, simT - run.end);
+    hookPivot.rotation.y = HOOK_OPEN * ease(clamp01(rel / 0.5));
+    const lift = RISE * ease(clamp01((rel - 0.4) / 1.4));
+    const catchLocal = new THREE.Vector3(0, 0, CATCH - CENTER);
+    const catchWorld = catchLocal.clone().applyQuaternion(q).add(pkg.position);
+    stack.quaternion.copy(setup === "seated" ? q : new THREE.Quaternion());
+    stack.position.copy(catchWorld).add(new THREE.Vector3(0, 0, lift));
+    const top = new THREE.Vector3(0, 0, PLATE_TOP - CATCH).applyQuaternion(stack.quaternion).add(stack.position);
+    cord.geometry.setFromPoints([top, top.clone().add(new THREE.Vector3(0, 0, 700))]);   // winch is off screen above
+    mats.fan.emissive.set(setup === "seated" && f.fans && rel === 0 ? css("--accent") : "#000000");
+    mats.fan.emissiveIntensity = 0.6;
+    const tilt = run.frames[0] ? f[13] : 0;
+    tiltEl.innerHTML = `${tilt.toFixed(1)}<small>°</small>`;
+    const max = 30;
+    barEl.style.width = `${Math.min(100, (tilt / max) * 100)}%`;
+    barEl.style.background = tilt > 10 ? css("--fail") : css("--pass");
+    document.getElementById("limitmark").style.left = `${(10 / max) * 100}%`;
+    const done = simT >= run.end;
+    verdictEl.textContent = done ? `Final ${run.final_tilt.toFixed(1)}° · ${run.passed ? "PASS" : "FAIL"} (limit 10°)` : "Limit 10° (R4)";
+    verdictEl.style.color = done ? css(run.passed ? "--pass" : "--fail") : css("--muted");
+    phaseEl.textContent = phaseName(simT);
+    speedEl.textContent = simT < run.end && rate(simT) < 1 ? "Touchdown at 1/4 speed" : "";
+    const total = run.end + RELEASE_S;
+    scrub.value = String(Math.round((simT / total) * 1000));
+    if (spark._cursor) { const x = spark._x(Math.min(simT, total)); spark._cursor.setAttribute("x1", x); spark._cursor.setAttribute("x2", x); }
+  }
+
+  let last = performance.now(), hold = 0;
+  function tick(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    if (playing && run) {
+      const total = run.end + RELEASE_S;
+      if (simT < total) simT = Math.min(total, simT + dt * (simT < run.end ? rate(simT) : 1));
+      else { hold += dt; if (hold > 2.2) { hold = 0; simT = 0; } }
+      update();
+    }
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  function resize() {
+    if (!renderer) return;
+    const w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+
+  playBtn.addEventListener("click", () => {
+    if (!run) return;
+    if (!playing && simT >= run.end + RELEASE_S) simT = 0;
+    playing = !playing; playBtn.textContent = playing ? "Pause" : "Play";
+  });
+  scrub.addEventListener("input", () => {
+    if (!run) return;
+    playing = false; playBtn.textContent = "Play";
+    simT = (Number(scrub.value) / 1000) * (run.end + RELEASE_S);
+    update();
+  });
+  document.querySelectorAll(".group [data-setup]").forEach(b => b.addEventListener("click", () => choose(b.dataset.setup, slope)));
+  document.querySelectorAll(".group [data-slope]").forEach(b => b.addEventListener("click", () => choose(setup, Number(b.dataset.slope))));
+
+  fetch("frames.json").then(r => { if (!r.ok) throw new Error(`frames: ${r.status}`); return r.json(); }).then(d => {
+    data = d;
+    buildGrid();
+    choose("seated", 20);
+    if (!window.THREE || !loader || !init3d()) return;
+    const names = ["landed-capsule", "landed-post", "loop", "hook", "swivel", "hook-carrier", "seat-collar", "seat-ring"];
+    return Promise.all(names.map(loadMesh)).then(parts => {
+      const geo = Object.fromEntries(parts);
+      buildRig(geo);
+      setGround(); setSeat(); paint();
+      status.hidden = true;
+      resize(); update();
+      renderer.setAnimationLoop(tick);
+    });
+  }).catch(err => fail(`Could not load the models (${err.message}).`));
+
+  window.addEventListener("resize", resize);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (pkg) { paint(); setGround(); } });
+  new MutationObserver(() => { if (pkg) { paint(); setGround(); } }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>
+
+</body>
+</html>
